@@ -125,15 +125,15 @@ router.get('/', async (req, res) => {
       axios.get(`${base}/v1/derivatives`,     { timeout: 15000 }),
     ]);
 
-    // Price is mandatory — everything else has fallbacks
-    if (rPrice.status !== 'fulfilled') {
-      return res.status(500).json({ error: 'Failed to generate signal', detail: 'Price data unavailable' });
+    if (rPrice.status !== 'fulfilled' || !rPrice.value.data?.data?._history) {
+        return res.status(500).json({ error: 'Failed to generate signal', detail: 'Price data unavailable' });
     }
 
-    const priceData  = rPrice.value.data.data;
-    const klines1d   = priceData._history.klines_1d;
-    const closes1d   = priceData._history.closes_1d;
-    const price      = priceData.price;
+    const priceResponse = rPrice.value.data;
+    const priceData     = priceResponse.data;
+    const klines1d      = priceData._history.klines_1d;
+    const closes1d      = priceData._history.closes_1d;
+    const price         = priceData.price;
 
     // Approximate multi-timeframe closes from daily data
     // 4h ≈ every 4th daily close interpolated; 1h ≈ last 50 daily closes
