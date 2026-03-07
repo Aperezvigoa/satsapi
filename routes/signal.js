@@ -142,7 +142,7 @@ function getHistoricalContext(fng, rsi, piRatio, trend) {
 
 router.get('/', async (req, res) => {
   try {
-    const base = 'http://localhost:3000';
+    const base = process.env.BASE_URL || 'http://localhost:3000';
 
     // Fetch market data + our endpoints in parallel
     const [

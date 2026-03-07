@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
       }
     }
 
-    const base = 'http://localhost:3000';
+    const base = process.env.BASE_URL || 'http://localhost:3000';
 
     // Fetch all endpoints in parallel
     const [signalRes, onchainRes, derivativesRes, mempoolRes, newsRes] = await Promise.all([
