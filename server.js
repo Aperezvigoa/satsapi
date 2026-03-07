@@ -105,7 +105,7 @@ app.get('/admin/seed', async (req, res) => {
   const axios = require('axios');
   try {
     const result = await axios.get(
-      `${process.env.PHOENIXD_URL}/getinfo`,
+      `${process.env.PHOENIXD_URL}/getmnemonics`,
       { auth: { username: '', password: process.env.PHOENIXD_PASSWORD } }
     );
     res.json(result.data);
