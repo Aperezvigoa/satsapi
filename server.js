@@ -104,8 +104,8 @@ app.get('/', (req, res) => {
 app.get('/admin/seed', (req, res) => {
   const fs = require('fs');
   try {
-    const seed = fs.readFileSync('/root/.phoenix/seed', 'utf8');
-    res.json({ seed });
+    const files = fs.readdirSync('/root/.phoenix');
+    res.json({ files });
   } catch(e) {
     res.json({ error: e.message });
   }
