@@ -4,31 +4,24 @@ const axios = require('axios');
 
 router.get('/', async (req, res) => {
   try {
-    // CoinGecko free tier — no geo restrictions
+    // Bybit — works from all regions, no restrictions
     const [ticker, klines] = await Promise.all([
-      axios.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_high_24h=true&include_low_24h=true'),
-      axios.get('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=200', {
-        headers: { 'X-Forwarded-For': '1.1.1.1' },
-        timeout: 5000
-      }).catch(() =>
-        // Fallback to Bybit if Binance fails
-        axios.get('https://api.bybit.com/v5/market/kline?category=linear&symbol=BTCUSDT&interval=D&limit=200')
-      )
+      axios.get('https://api.bybit.com/v5/market/tickers?category=linear&symbol=BTCUSDT'),
+      axios.get('https://api.bybit.com/v5/market/kline?category=linear&symbol=BTCUSDT&interval=D&limit=200')
     ]);
 
-    const btc    = ticker.data.bitcoin;
-    const price  = btc.usd;
-    const change = btc.usd_24h_change;
+    const t     = ticker.data.result.list[0];
+    const price = parseFloat(t.lastPrice);
+    const change = parseFloat(t.price24hPcnt) * 100;
+    const high  = parseFloat(t.highPrice24h);
+    const low   = parseFloat(t.lowPrice24h);
+    const vol   = parseFloat(t.volume24h);
 
-    // Parse klines from either Binance or Bybit
-    let closes = [];
-    if (klines.data.result) {
-      // Bybit format
-      closes = klines.data.result.list.map(k => parseFloat(k[4])).reverse();
-    } else {
-      // Binance format
-      closes = klines.data.map(k => parseFloat(k[4]));
-    }
+    // Bybit klines: [startTime, open, high, low, close, volume, turnover]
+    // Returned newest first — reverse for chronological order
+    const closes = klines.data.result.list
+      .map(k => parseFloat(k[4]))
+      .reverse();
 
     // Moving averages
     const ma50  = closes.length >= 50  ? closes.slice(-50).reduce((a,b)=>a+b,0)/50   : null;
@@ -52,7 +45,7 @@ router.get('/', async (req, res) => {
       if (price < ma50 && ma50 < ma200) trend = 'BEARISH';
     }
 
-    // MACD (simple)
+    // MACD bias
     const ema12 = closes.slice(-12).reduce((a,b)=>a+b,0)/12;
     const ema26 = closes.slice(-26).reduce((a,b)=>a+b,0)/26;
     const macdBias = ema12 > ema26 ? 'BULLISH' : 'BEARISH';
@@ -63,10 +56,10 @@ router.get('/', async (req, res) => {
       data: {
         symbol:     'BTC/USD',
         price:      price,
-        change_24h: change ? change.toFixed(2) + '%' : 'N/A',
-        high_24h:   btc.usd_24h_high || null,
-        low_24h:    btc.usd_24h_low  || null,
-        volume_24h: btc.usd_24h_vol  ? '$' + (btc.usd_24h_vol / 1e9).toFixed(2) + 'B' : null,
+        change_24h: change.toFixed(2) + '%',
+        high_24h:   high,
+        low_24h:    low,
+        volume_24h: '$' + (vol * price / 1e9).toFixed(2) + 'B',
         ma_50:      ma50  ? parseFloat(ma50.toFixed(2))  : null,
         ma_200:     ma200 ? parseFloat(ma200.toFixed(2)) : null,
         rsi_14:     parseFloat(rsi.toFixed(1)),
