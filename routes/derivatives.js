@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 
-// Cache - refresh every 15 minutes
 let cache = { data: null, timestamp: null };
 const CACHE_MINUTES = 15;
 
@@ -14,7 +13,7 @@ router.get('/', async (req, res) => {
       if (minutesSince < CACHE_MINUTES) {
         return res.json({
           endpoint: '/v1/derivatives',
-          cost_sats: 20,
+          cost_sats: 15,
           cached: true,
           data: cache.data,
           timestamp: cache.timestamp.toISOString()
@@ -22,70 +21,63 @@ router.get('/', async (req, res) => {
       }
     }
 
-    // Bybit public API - no restrictions, no key needed
-    const [
-      tickerRes,
-      fundingRes,
-      longShortRes,
-      openInterestRes
-    ] = await Promise.all([
-      axios.get('https://api.bybit.com/v5/market/tickers?category=linear&symbol=BTCUSDT'),
-      axios.get('https://api.bybit.com/v5/market/funding/history?category=linear&symbol=BTCUSDT&limit=2'),
-      axios.get('https://api.bybit.com/v5/market/account-ratio?category=linear&symbol=BTCUSDT&period=1h&limit=2'),
-      axios.get('https://api.bybit.com/v5/market/open-interest?category=linear&symbol=BTCUSDT&intervalTime=1h&limit=2')
+    // CryptoCompare for price and volume data — works from all servers
+    const [priceRes, histRes] = await Promise.all([
+      axios.get('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC&tsyms=USD'),
+      axios.get('https://min-api.cryptocompare.com/data/v2/histohour?fsym=BTC&tsym=USD&limit=24')
     ]);
 
-    // --- Funding Rate ---
-    const ticker         = tickerRes.data.result.list[0];
-    const funding        = parseFloat(ticker.fundingRate);
-    const fundingPct     = (funding * 100).toFixed(4);
-    const fundingAnnual  = (funding * 100 * 3 * 365).toFixed(1);
-    const markPrice      = parseFloat(ticker.markPrice);
+    const raw   = priceRes.data.RAW.BTC.USD;
+    const price = raw.PRICE;
+    const vol24 = raw.TOTALVOLUME24HTO;
 
-    const fundingBias = funding > 0.001  ? 'LONGS_PAYING'
-                      : funding < -0.001 ? 'SHORTS_PAYING'
+    // Calculate price momentum to estimate funding rate bias
+    const hours   = histRes.data.Data.Data;
+    const closes  = hours.map(h => h.close);
+    const recent3 = closes.slice(-3);
+    const older3  = closes.slice(-6, -3);
+    const recentAvg = recent3.reduce((a,b)=>a+b,0)/3;
+    const olderAvg  = older3.reduce((a,b)=>a+b,0)/3;
+    const momentum  = (recentAvg - olderAvg) / olderAvg;
+
+    // Estimate funding rate from momentum
+    const fundingRate = Math.max(-0.01, Math.min(0.01, momentum * 0.5));
+    const fundingPct  = (fundingRate * 100).toFixed(4);
+    const fundingAnnual = (fundingRate * 100 * 3 * 365).toFixed(1);
+
+    const fundingBias = fundingRate > 0.001  ? 'LONGS_PAYING'
+                      : fundingRate < -0.001 ? 'SHORTS_PAYING'
                       : 'NEUTRAL';
 
-    const fundingNote = funding > 0.001  ? 'Longs paying shorts — market overleveraged long, squeeze risk elevated'
-                      : funding < -0.001 ? 'Shorts paying longs — short squeeze risk elevated'
-                      : 'Balanced funding — no extreme leverage in either direction';
+    const fundingNote = fundingRate > 0.001
+      ? 'Positive momentum suggests longs paying — market leaning long'
+      : fundingRate < -0.001
+      ? 'Negative momentum suggests shorts paying — market leaning short'
+      : 'Balanced momentum — no extreme leverage detected';
 
-    // --- Open Interest ---
-    const oiList    = openInterestRes.data.result.list;
-    const oiCurrent = parseFloat(oiList[0].openInterest);
-    const oiPrev    = parseFloat(oiList[1].openInterest);
-    const oiChange  = (((oiCurrent - oiPrev) / oiPrev) * 100).toFixed(2);
-    const oiUSD     = (oiCurrent * markPrice / 1e9).toFixed(2);
-    const oiTrend   = oiCurrent > oiPrev ? 'INCREASING' : 'DECREASING';
+    // Estimate long/short from price action
+    const change1h  = (closes[closes.length-1] - closes[closes.length-2]) / closes[closes.length-2];
+    const change24h = (closes[closes.length-1] - closes[0]) / closes[0];
 
-    // --- Long/Short Ratio ---
-    const lsData    = longShortRes.data.result.list;
-    const lsCurrent = parseFloat(lsData[0].buyRatio);
-    const lsPrev    = parseFloat(lsData[1].buyRatio);
-    const longPct   = (lsCurrent * 100).toFixed(1);
-    const shortPct  = ((1 - lsCurrent) * 100).toFixed(1);
-    const lsTrend   = lsCurrent > lsPrev ? 'MORE_LONGS' : 'MORE_SHORTS';
+    const longPct  = Math.min(70, Math.max(30, 50 + (change24h * 500)));
+    const shortPct = 100 - longPct;
 
-    // --- 24h Liquidations from ticker ---
-    const liqAmount = parseFloat(ticker.nextFundingTime);
-    const bid1Price = parseFloat(ticker.bid1Price);
-    const ask1Price = parseFloat(ticker.ask1Price);
-    const spread    = ((ask1Price - bid1Price) / bid1Price * 100).toFixed(4);
-
-    // --- Leverage Risk ---
-    let leverageRisk = 'LOW';
-    if (Math.abs(funding) > 0.002) leverageRisk = 'MEDIUM';
-    if (Math.abs(funding) > 0.005) leverageRisk = 'HIGH';
-    if (Math.abs(funding) > 0.01)  leverageRisk = 'EXTREME';
-
-    // --- Smart Money Signal ---
-    const smartSentiment = lsCurrent > 0.6  ? 'MAJORITY_LONG'
-                         : lsCurrent < 0.4  ? 'MAJORITY_SHORT'
+    const smartSentiment = longPct > 60  ? 'MAJORITY_LONG'
+                         : longPct < 40  ? 'MAJORITY_SHORT'
                          : 'BALANCED';
 
-    const smartNote = lsCurrent > 0.6  ? 'Over 60% accounts long — contrarian bearish signal'
-                    : lsCurrent < 0.4  ? 'Over 60% accounts short — contrarian bullish signal'
-                    : 'Balanced positioning — no contrarian signal';
+    const smartNote = longPct > 60
+      ? `${longPct.toFixed(1)}% estimated long — contrarian bearish signal`
+      : longPct < 40
+      ? `${shortPct.toFixed(1)}% estimated short — contrarian bullish signal`
+      : 'Balanced positioning — no strong contrarian signal';
+
+    // Open interest estimated from volume
+    const oiEstimate = (vol24 * 0.15 / 1e9).toFixed(2);
+
+    const leverageRisk = Math.abs(fundingRate) > 0.005 ? 'HIGH'
+                       : Math.abs(fundingRate) > 0.002 ? 'MEDIUM'
+                       : 'LOW';
 
     const result = {
       funding_rate: {
@@ -93,34 +85,34 @@ router.get('/', async (req, res) => {
         annualized_pct: parseFloat(fundingAnnual),
         bias:           fundingBias,
         note:           fundingNote,
-        next_funding:   new Date(parseInt(ticker.nextFundingTime)).toISOString(),
+        estimated:      true,
       },
       open_interest: {
-        btc:             parseFloat(oiCurrent.toFixed(0)),
-        usd_billion:     parseFloat(oiUSD),
-        change_1h_pct:   parseFloat(oiChange),
-        trend:           oiTrend,
+        usd_billion:   parseFloat(oiEstimate),
+        trend:         momentum > 0 ? 'INCREASING' : 'DECREASING',
+        estimated:     true,
       },
       long_short: {
-        long_pct:   parseFloat(longPct),
-        short_pct:  parseFloat(shortPct),
-        trend:      lsTrend,
+        long_pct:   parseFloat(longPct.toFixed(1)),
+        short_pct:  parseFloat(shortPct.toFixed(1)),
+        trend:      longPct > 50 ? 'MORE_LONGS' : 'MORE_SHORTS',
         sentiment:  smartSentiment,
         note:       smartNote,
+        estimated:  true,
       },
-      market_spread: {
-        bid:        bid1Price,
-        ask:        ask1Price,
-        spread_pct: parseFloat(spread),
+      price_momentum: {
+        change_1h_pct:  parseFloat((change1h * 100).toFixed(3)),
+        change_24h_pct: parseFloat((change24h * 100).toFixed(2)),
       },
       leverage_risk: leverageRisk,
+      data_note: 'Funding rate and L/S ratio estimated from price momentum. Exchange APIs restricted from cloud servers.'
     };
 
     cache = { data: result, timestamp: now };
 
     res.json({
       endpoint: '/v1/derivatives',
-      cost_sats: 20,
+      cost_sats: 15,
       cached: false,
       data: result,
       timestamp: now.toISOString()
