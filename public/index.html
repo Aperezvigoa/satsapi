@@ -1111,39 +1111,39 @@
   </div>
 
   <div class="code-block active" id="tab-js"><span class="c-comment">// Fetch market signal — pay 100 sats via Lightning</span>
-<span class="c-keyword">const</span> <span class="c-var">response</span> = <span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">'https://satsapi.io/v1/signal'</span>);
+<span class="c-keyword">const</span> <span class="c-var">response</span> = <span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">'https://satsapi.dev/v1/signal'</span>);
 
 <span class="c-comment">// If 402, pay the Lightning invoice first</span>
 <span class="c-keyword">if</span> (response.status === <span class="c-num">402</span>) {
   <span class="c-keyword">const</span> <span class="c-var">invoice</span> = response.headers.<span class="c-func">get</span>(<span class="c-string">'WWW-Authenticate'</span>);
   <span class="c-keyword">await</span> <span class="c-var">wallet</span>.<span class="c-func">pay</span>(<span class="c-var">invoice</span>); <span class="c-comment">// instant, &lt;1s</span>
-  <span class="c-keyword">const</span> <span class="c-var">data</span> = <span class="c-keyword">await</span> (<span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">'https://satsapi.io/v1/signal'</span>)).<span class="c-func">json</span>();
+  <span class="c-keyword">const</span> <span class="c-var">data</span> = <span class="c-keyword">await</span> (<span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">'https://satsapi.dev/v1/signal'</span>)).<span class="c-func">json</span>();
   console.<span class="c-func">log</span>(<span class="c-var">data</span>.data.signal); <span class="c-comment">// "BUY" | "SELL" | "HOLD"</span>
 }</div>
 
   <div class="code-block" id="tab-python"><span class="c-keyword">import</span> requests
 
 <span class="c-comment"># Fetch full market summary — 200 sats</span>
-<span class="c-var">r</span> = requests.<span class="c-func">get</span>(<span class="c-string">"https://satsapi.io/v1/summary"</span>)
+<span class="c-var">r</span> = requests.<span class="c-func">get</span>(<span class="c-string">"https://satsapi.dev/v1/summary"</span>)
 
 <span class="c-keyword">if</span> r.status_code == <span class="c-num">402</span>:
     <span class="c-var">invoice</span> = r.headers[<span class="c-string">"WWW-Authenticate"</span>]
     <span class="c-var">wallet</span>.<span class="c-func">pay</span>(<span class="c-var">invoice</span>)  <span class="c-comment"># pay Lightning invoice</span>
-    <span class="c-var">data</span> = requests.<span class="c-func">get</span>(<span class="c-string">"https://satsapi.io/v1/summary"</span>).<span class="c-func">json</span>()
+    <span class="c-var">data</span> = requests.<span class="c-func">get</span>(<span class="c-string">"https://satsapi.dev/v1/summary"</span>).<span class="c-func">json</span>()
     <span class="c-func">print</span>(<span class="c-var">data</span>[<span class="c-string">"data"</span>][<span class="c-string">"bot_ready"</span>][<span class="c-string">"signal"</span>])  <span class="c-comment"># "HOLD"</span>
     <span class="c-func">print</span>(<span class="c-var">data</span>[<span class="c-string">"data"</span>][<span class="c-string">"bot_ready"</span>][<span class="c-string">"confluence"</span>])  <span class="c-comment"># 52</span></div>
 
   <div class="code-block" id="tab-curl"><span class="c-comment"># Basic price check — 3 sats</span>
-<span class="c-func">curl</span> https://satsapi.io/v1/price
+<span class="c-func">curl</span> https://satsapi.dev/v1/price
 
 <span class="c-comment"># Response: HTTP 402 + Lightning invoice in header</span>
 <span class="c-comment"># Pay invoice → repeat request → get JSON data</span>
 
 <span class="c-comment"># Full market summary — 200 sats</span>
-<span class="c-func">curl</span> https://satsapi.io/v1/summary
+<span class="c-func">curl</span> https://satsapi.dev/v1/summary
 
 <span class="c-comment"># Transaction lookup</span>
-<span class="c-func">curl</span> https://satsapi.io/v1/tx/<span class="c-var">YOUR_TXID_HERE</span></div>
+<span class="c-func">curl</span> https://satsapi.dev/v1/tx/<span class="c-var">YOUR_TXID_HERE</span></div>
 
   <div class="code-block" id="tab-bot"><span class="c-comment">// AI Agent integration example (LangChain / AutoGPT)</span>
 <span class="c-keyword">const</span> <span class="c-var">tool</span> = {
