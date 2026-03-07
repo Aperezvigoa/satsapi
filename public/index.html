@@ -4,946 +4,364 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="SatsAPI — Bitcoin market intelligence API. Pay per call in satoshis via Lightning Network. No subscriptions. No registration. 8 endpoints covering price, mempool, on-chain data, derivatives, AI signals and more.">
-<meta name="keywords" content="bitcoin api, lightning network api, l402, satoshis, btc signal api, mempool api, crypto data api, pay per call api">
 <meta property="og:title" content="SatsAPI — Bitcoin Intelligence, Pay Per Call">
 <meta property="og:description" content="8 endpoints. Real data. Pay in satoshis. No subscriptions.">
 <title>SatsAPI — Bitcoin Intelligence API</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;700&family=Barlow:wght@300;400;600;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:       #060608;
-    --surface:  #0d0d10;
-    --surface2: #141418;
-    --border:   #1e1e24;
-    --border2:  #2a2a33;
-    --amber:    #f59e0b;
-    --amber-dim:#f59e0b22;
-    --amber-glow:#f59e0b0a;
-    --text:     #e2e0d8;
-    --muted:    #6b6a72;
-    --muted2:   #4a4952;
-    --green:    #34d399;
-    --red:      #f87171;
-    --blue:     #60a5fa;
-    --purple:   #a78bfa;
+    --bg:#060608; --surface:#0d0d10; --surface2:#141418;
+    --border:#1e1e24; --border2:#2a2a33;
+    --amber:#f59e0b; --amber-dim:#f59e0b22; --amber-glow:#f59e0b0a;
+    --text:#e2e0d8; --muted:#6b6a72; --muted2:#4a4952;
+    --green:#34d399; --red:#f87171; --blue:#60a5fa; --purple:#a78bfa;
   }
-
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Barlow', sans-serif;
-    overflow-x: hidden;
-    cursor: crosshair;
-  }
-
-  /* SCANLINE EFFECT */
+  html { scroll-behavior:smooth; }
+  body { background:var(--bg); color:var(--text); font-family:'Barlow',sans-serif; overflow-x:hidden; }
   body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,0,0,0.03) 2px,
-      rgba(0,0,0,0.03) 4px
-    );
-    pointer-events: none;
-    z-index: 999;
+    content:''; position:fixed; inset:0;
+    background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);
+    pointer-events:none; z-index:999;
   }
 
-  /* ──────────────────────────────────────
-     NAV
-  ────────────────────────────────────── */
+  /* NAV */
   nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.2rem 3rem;
-    background: rgba(6,6,8,0.85);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:1.2rem 3rem;
+    background:rgba(6,6,8,0.9); backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--border);
   }
-
   .logo {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--amber);
-    letter-spacing: 0.05em;
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
+    font-family:'IBM Plex Mono',monospace; font-size:1rem; font-weight:700;
+    color:var(--amber); letter-spacing:0.05em; display:flex; align-items:center; gap:0.6rem;
   }
-
-  .logo-dot {
-    width: 8px; height: 8px;
-    background: var(--amber);
-    border-radius: 50%;
-    animation: pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%,100% { opacity:1; transform:scale(1); box-shadow:0 0 0 0 var(--amber-dim); }
-    50% { opacity:0.7; transform:scale(0.85); box-shadow:0 0 0 6px transparent; }
-  }
-
-  .nav-links {
-    display: flex;
-    gap: 2.5rem;
-    list-style: none;
-  }
-
+  .logo-dot { width:8px; height:8px; background:var(--amber); border-radius:50%; animation:pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.8)} }
+  .nav-links { display:flex; gap:2rem; list-style:none; align-items:center; }
   .nav-links a {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--muted);
-    text-decoration: none;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    transition: color 0.2s;
+    font-family:'IBM Plex Mono',monospace; font-size:0.72rem; color:var(--muted);
+    text-decoration:none; text-transform:uppercase; letter-spacing:0.12em; transition:color 0.2s;
+  }
+  .nav-links a:hover { color:var(--text); }
+  .nav-cta { color:var(--bg) !important; background:var(--amber); padding:0.5rem 1.2rem; transition:background 0.2s !important; }
+  .nav-cta:hover { background:#fbbf24 !important; }
+  .nav-toggle { display:none; background:none; border:none; cursor:pointer; padding:0.5rem; }
+  .nav-toggle svg { width:22px; height:22px; stroke:var(--text); stroke-width:2; fill:none; }
+
+  @media (max-width:768px) {
+    nav { padding:1rem 1.5rem; }
+    .nav-toggle { display:block; }
+    .nav-links {
+      display:none; position:fixed; top:60px; left:0; right:0;
+      background:rgba(6,6,8,0.98); border-bottom:1px solid var(--border);
+      flex-direction:column; gap:0; padding:1rem 0;
+    }
+    .nav-links.open { display:flex; }
+    .nav-links li { width:100%; }
+    .nav-links a { display:block; padding:0.9rem 1.5rem; border-bottom:1px solid var(--border); }
+    .nav-cta { margin:1rem 1.5rem; display:block; text-align:center; }
   }
 
-  .nav-links a:hover { color: var(--text); }
-
-  .nav-cta {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--bg) !important;
-    background: var(--amber);
-    padding: 0.5rem 1.2rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    transition: background 0.2s !important;
-  }
-
-  .nav-cta:hover { background: #fbbf24; color: var(--bg) !important; }
-
-  /* ──────────────────────────────────────
-     HERO
-  ────────────────────────────────────── */
+  /* HERO */
   .hero {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 8rem 3rem 4rem;
-    position: relative;
-    overflow: hidden;
+    min-height:100vh; display:flex; flex-direction:column; justify-content:center;
+    padding:8rem 3rem 5rem; position:relative; overflow:hidden;
   }
-
-  /* Animated grid */
   .hero-grid {
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(var(--border) 1px, transparent 1px),
-      linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 48px 48px;
-    opacity: 0.4;
-    mask-image: radial-gradient(ellipse 70% 80% at 20% 50%, black 20%, transparent 80%);
+    position:absolute; inset:0;
+    background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+    background-size:48px 48px; opacity:0.4;
+    mask-image:radial-gradient(ellipse 70% 80% at 20% 50%,black 20%,transparent 80%);
   }
-
-  /* Amber glow blob */
   .hero-glow {
-    position: absolute;
-    width: 800px; height: 600px;
-    background: radial-gradient(ellipse, #f59e0b08 0%, transparent 65%);
-    top: 50%; left: -10%;
-    transform: translateY(-50%);
-    pointer-events: none;
+    position:absolute; width:800px; height:600px;
+    background:radial-gradient(ellipse,#f59e0b08 0%,transparent 65%);
+    top:50%; left:-10%; transform:translateY(-50%); pointer-events:none;
   }
-
-  .hero-content {
-    position: relative;
-    z-index: 10;
-    max-width: 900px;
-  }
-
+  .hero-content { position:relative; z-index:10; max-width:760px; }
   .hero-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--amber);
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    margin-bottom: 2rem;
-    opacity: 0;
-    animation: fadeUp 0.7s ease 0.1s forwards;
+    display:inline-flex; align-items:center; gap:0.75rem;
+    font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color:var(--amber);
+    text-transform:uppercase; letter-spacing:0.15em; margin-bottom:2rem;
+    opacity:0; animation:fadeUp 0.7s ease 0.1s forwards;
   }
-
-  .hero-tag::before {
-    content: '';
-    width: 32px; height: 1px;
-    background: var(--amber);
-  }
-
+  .hero-tag::before { content:''; width:32px; height:1px; background:var(--amber); }
   h1 {
-    font-size: clamp(3.5rem, 8vw, 8rem);
-    font-weight: 900;
-    line-height: 0.92;
-    letter-spacing: -0.04em;
-    margin-bottom: 2rem;
-    opacity: 0;
-    animation: fadeUp 0.7s ease 0.25s forwards;
+    font-size:clamp(2.8rem,8vw,8rem); font-weight:900; line-height:0.92;
+    letter-spacing:-0.04em; margin-bottom:2rem;
+    opacity:0; animation:fadeUp 0.7s ease 0.25s forwards;
   }
-
-  h1 em {
-    font-style: normal;
-    color: var(--amber);
-    position: relative;
-  }
-
+  h1 em { font-style:normal; color:var(--amber); position:relative; }
   h1 em::after {
-    content: '';
-    position: absolute;
-    bottom: 4px; left: 0; right: 0;
-    height: 3px;
-    background: var(--amber);
-    opacity: 0.4;
+    content:''; position:absolute; bottom:4px; left:0; right:0;
+    height:3px; background:var(--amber); opacity:0.4;
   }
-
   .hero-sub {
-    font-size: 1.25rem;
-    font-weight: 300;
-    color: var(--muted);
-    max-width: 560px;
-    line-height: 1.7;
-    margin-bottom: 3rem;
-    opacity: 0;
-    animation: fadeUp 0.7s ease 0.4s forwards;
+    font-size:clamp(1rem,2.5vw,1.25rem); font-weight:300; color:var(--muted);
+    max-width:560px; line-height:1.7; margin-bottom:3rem;
+    opacity:0; animation:fadeUp 0.7s ease 0.4s forwards;
   }
-
-  .hero-sub strong { color: var(--text); font-weight: 600; }
-
+  .hero-sub strong { color:var(--text); font-weight:600; }
   .hero-actions {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    flex-wrap: wrap;
-    opacity: 0;
-    animation: fadeUp 0.7s ease 0.55s forwards;
+    display:flex; gap:1rem; align-items:center; flex-wrap:wrap;
+    opacity:0; animation:fadeUp 0.7s ease 0.55s forwards;
   }
-
   .btn-primary {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.82rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--bg);
-    background: var(--amber);
-    border: none;
-    padding: 1rem 2.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
-    text-decoration: none;
-    display: inline-block;
+    font-family:'IBM Plex Mono',monospace; font-size:0.82rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:0.08em; color:var(--bg); background:var(--amber);
+    border:none; padding:1rem 2.5rem; cursor:pointer; transition:all 0.2s;
+    clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);
+    text-decoration:none; display:inline-block;
   }
-
-  .btn-primary:hover {
-    background: #fbbf24;
-    transform: translateY(-2px);
-    box-shadow: 0 12px 40px #f59e0b33;
-  }
-
+  .btn-primary:hover { background:#fbbf24; transform:translateY(-2px); box-shadow:0 12px 40px #f59e0b33; }
   .btn-ghost {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.82rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    background: transparent;
-    border: 1px solid var(--border2);
-    padding: 1rem 2.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-    display: inline-block;
+    font-family:'IBM Plex Mono',monospace; font-size:0.82rem; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--muted); background:transparent;
+    border:1px solid var(--border2); padding:1rem 2.5rem; cursor:pointer;
+    transition:all 0.2s; text-decoration:none; display:inline-block;
   }
-
-  .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
-
-  /* LIVE TICKER */
-  .ticker-bar {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    border-top: 1px solid var(--border);
-    background: var(--surface);
-    overflow: hidden;
-    opacity: 0;
-    animation: fadeUp 0.7s ease 0.9s forwards;
-  }
-
-  .ticker-inner {
-    display: flex;
-    gap: 5rem;
-    padding: 0.75rem 0;
-    animation: tickerScroll 30s linear infinite;
-    width: max-content;
-  }
-
-  @keyframes tickerScroll {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
-  }
-
-  .ticker-item {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.7rem;
-    white-space: nowrap;
-    display: flex;
-    gap: 0.75rem;
-    color: var(--muted);
-  }
-
-  .ticker-label { color: var(--muted2); }
-  .ticker-val   { color: var(--text); }
-  .ticker-up    { color: var(--green); }
-  .ticker-down  { color: var(--red); }
+  .btn-ghost:hover { color:var(--text); border-color:var(--muted); }
 
   /* HERO STATS */
   .hero-stats {
-    position: absolute;
-    right: 3rem;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    z-index: 10;
-    opacity: 0;
-    animation: fadeLeft 0.7s ease 0.7s forwards;
+    position:absolute; right:3rem; top:50%; transform:translateY(-50%);
+    display:flex; flex-direction:column; gap:2rem; z-index:10;
+    opacity:0; animation:fadeLeft 0.7s ease 0.7s forwards;
   }
-
   @keyframes fadeLeft {
-    from { opacity:0; transform: translateY(-50%) translateX(20px); }
-    to   { opacity:1; transform: translateY(-50%) translateX(0); }
+    from{opacity:0;transform:translateY(-50%) translateX(20px)}
+    to{opacity:1;transform:translateY(-50%) translateX(0)}
+  }
+  .hero-stat { text-align:right; border-right:2px solid var(--border2); padding-right:1.5rem; }
+  .hero-stat-val { font-family:'IBM Plex Mono',monospace; font-size:1.6rem; font-weight:700; color:var(--amber); line-height:1; }
+  .hero-stat-label { font-family:'IBM Plex Mono',monospace; font-size:0.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.12em; margin-top:0.3rem; }
+
+  @media (max-width:900px) {
+    .hero { padding:7rem 1.5rem 4rem; }
+    .hero-stats { display:none; }
   }
 
-  .hero-stat {
-    text-align: right;
-    border-right: 2px solid var(--border2);
-    padding-right: 1.5rem;
+  /* TICKER */
+  .ticker-bar {
+    position:absolute; bottom:0; left:0; right:0;
+    border-top:1px solid var(--border); background:var(--surface);
+    overflow:hidden; opacity:0; animation:fadeUp 0.7s ease 0.9s forwards;
   }
+  .ticker-inner {
+    display:flex; gap:5rem; padding:0.75rem 0;
+    animation:tickerScroll 40s linear infinite; width:max-content;
+  }
+  @keyframes tickerScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+  .ticker-item {
+    font-family:'IBM Plex Mono',monospace; font-size:0.7rem;
+    white-space:nowrap; display:flex; gap:0.75rem; color:var(--muted);
+  }
+  .ticker-label{color:var(--muted2)} .ticker-val{color:var(--text)}
+  .ticker-up{color:var(--green)} .ticker-down{color:var(--red)}
 
-  .hero-stat-val {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: var(--amber);
-    line-height: 1;
-  }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
 
-  .hero-stat-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.62rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    margin-top: 0.3rem;
-  }
-
-  @keyframes fadeUp {
-    from { opacity:0; transform: translateY(24px); }
-    to   { opacity:1; transform: translateY(0); }
-  }
-
-  /* ──────────────────────────────────────
-     SECTIONS
-  ────────────────────────────────────── */
-  section {
-    padding: 6rem 3rem;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
+  /* SECTIONS */
+  section { padding:5rem 3rem; max-width:1200px; margin:0 auto; }
+  @media (max-width:768px) { section { padding:4rem 1.5rem; } }
 
   .section-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--amber);
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    font-family:'IBM Plex Mono',monospace; font-size:0.68rem; color:var(--amber);
+    text-transform:uppercase; letter-spacing:0.2em; margin-bottom:1rem;
+    display:flex; align-items:center; gap:0.75rem;
   }
+  .section-label::before { content:''; width:24px; height:1px; background:var(--amber); }
+  h2 { font-size:clamp(1.8rem,4vw,4rem); font-weight:900; letter-spacing:-0.03em; line-height:1.05; margin-bottom:1rem; }
+  h2 span { color:var(--amber); }
+  .section-desc { font-size:1.05rem; color:var(--muted); max-width:520px; line-height:1.7; font-weight:300; margin-bottom:3.5rem; }
+  .divider { width:100%; height:1px; background:linear-gradient(90deg,transparent,var(--border2),transparent); }
 
-  .section-label::before {
-    content: '';
-    width: 24px; height: 1px;
-    background: var(--amber);
-  }
-
-  h2 {
-    font-size: clamp(2.2rem, 4vw, 4rem);
-    font-weight: 900;
-    letter-spacing: -0.03em;
-    line-height: 1.05;
-    margin-bottom: 1rem;
-  }
-
-  h2 span { color: var(--amber); }
-
-  .section-desc {
-    font-size: 1.05rem;
-    color: var(--muted);
-    max-width: 520px;
-    line-height: 1.7;
-    font-weight: 300;
-    margin-bottom: 3.5rem;
-  }
-
-  /* DIVIDER */
-  .divider {
-    width: 100%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--border2), transparent);
-  }
-
-  /* ──────────────────────────────────────
-     ENDPOINTS
-  ────────────────────────────────────── */
-  #endpoints { max-width: 100%; padding: 6rem 3rem; }
-
-  .endpoints-header {
-    max-width: 1200px;
-    margin: 0 auto 3rem;
-  }
-
+  /* ENDPOINTS */
+  #endpoints { max-width:100%; padding:5rem 3rem; }
+  @media (max-width:768px) { #endpoints { padding:4rem 1.5rem; } }
+  .endpoints-header { max-width:1200px; margin:0 auto 3rem; }
   .endpoints-grid {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1px;
-    background: var(--border);
-    border: 1px solid var(--border);
+    max-width:1200px; margin:0 auto;
+    display:grid; grid-template-columns:repeat(4,1fr);
+    gap:1px; background:var(--border); border:1px solid var(--border);
   }
-
-  @media (max-width: 900px) {
-    .endpoints-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (max-width: 560px) {
-    .endpoints-grid { grid-template-columns: 1fr; }
-  }
+  @media (max-width:1000px) { .endpoints-grid { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:560px)  { .endpoints-grid { grid-template-columns:1fr; } }
 
   .ep-card {
-    background: var(--bg);
-    padding: 2rem;
-    transition: background 0.2s;
-    position: relative;
-    overflow: hidden;
+    background:var(--bg); padding:2rem; transition:background 0.2s;
+    position:relative; overflow:hidden;
   }
-
   .ep-card::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 50% 0%, var(--amber-glow), transparent 60%);
-    opacity: 0;
-    transition: opacity 0.3s;
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(circle at 50% 0%,var(--amber-glow),transparent 60%);
+    opacity:0; transition:opacity 0.3s;
   }
-
-  .ep-card:hover { background: var(--surface); }
-  .ep-card:hover::after { opacity: 1; }
-
+  .ep-card:hover { background:var(--surface); }
+  .ep-card:hover::after { opacity:1; }
+  .ep-icon { width:28px; height:28px; margin-bottom:1rem; color:var(--amber); opacity:0.7; }
   .ep-method {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.6rem;
-    background: var(--amber-dim);
-    color: var(--amber);
-    padding: 0.2rem 0.6rem;
-    display: inline-block;
-    margin-bottom: 1rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font-family:'IBM Plex Mono',monospace; font-size:0.6rem; background:var(--amber-dim);
+    color:var(--amber); padding:0.2rem 0.6rem; display:inline-block;
+    margin-bottom:1rem; letter-spacing:0.1em; text-transform:uppercase;
   }
+  .ep-path { font-family:'IBM Plex Mono',monospace; font-size:0.9rem; color:var(--text); margin-bottom:0.75rem; font-weight:500; }
+  .ep-desc { font-size:0.82rem; color:var(--muted); line-height:1.65; margin-bottom:1.5rem; font-weight:300; }
+  .ep-tags { display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:1.5rem; }
+  .ep-tag { font-family:'IBM Plex Mono',monospace; font-size:0.58rem; color:var(--muted); border:1px solid var(--border2); padding:0.15rem 0.5rem; text-transform:uppercase; letter-spacing:0.08em; }
+  .ep-footer { display:flex; justify-content:space-between; align-items:center; padding-top:1rem; border-top:1px solid var(--border); }
+  .ep-cost { font-family:'IBM Plex Mono',monospace; font-size:1rem; font-weight:700; color:var(--amber); }
+  .ep-rate { font-family:'IBM Plex Mono',monospace; font-size:0.6rem; color:var(--muted2); text-transform:uppercase; }
 
-  .ep-path {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.9rem;
-    color: var(--text);
-    margin-bottom: 0.75rem;
-    font-weight: 500;
-  }
-
-  .ep-desc {
-    font-size: 0.82rem;
-    color: var(--muted);
-    line-height: 1.65;
-    margin-bottom: 1.5rem;
-    font-weight: 300;
-  }
-
-  .ep-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .ep-tag {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.58rem;
-    color: var(--muted);
-    border: 1px solid var(--border2);
-    padding: 0.15rem 0.5rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .ep-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border);
-  }
-
-  .ep-cost {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--amber);
-  }
-
-  .ep-rate {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.6rem;
-    color: var(--muted2);
-    text-transform: uppercase;
-  }
-
-  /* ──────────────────────────────────────
-     LIVE DEMO
-  ────────────────────────────────────── */
+  /* DEMO */
   .demo-layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1px;
-    background: var(--border);
-    border: 1px solid var(--border);
-    margin-top: 3rem;
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:1px; background:var(--border); border:1px solid var(--border); margin-top:3rem;
   }
-
-  @media (max-width: 700px) {
-    .demo-layout { grid-template-columns: 1fr; }
-  }
-
-  .demo-panel {
-    background: var(--bg);
-    padding: 2rem;
-  }
-
+  @media (max-width:700px) { .demo-layout { grid-template-columns:1fr; } }
+  .demo-panel { background:var(--bg); padding:2rem; }
+  @media (max-width:480px) { .demo-panel { padding:1.25rem; } }
   .demo-panel-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.65rem;
-    color: var(--muted2);
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    margin-bottom: 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:var(--muted2);
+    text-transform:uppercase; letter-spacing:0.15em; margin-bottom:1.25rem;
+    display:flex; align-items:center; gap:0.5rem;
   }
-
-  .demo-panel-label span {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-
+  .live-dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 1.5s ease-in-out infinite; }
   select {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    color: var(--text);
-    padding: 0.8rem 1rem;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.78rem;
-    outline: none;
-    appearance: none;
-    cursor: pointer;
-    transition: border-color 0.2s;
-    margin-bottom: 1rem;
+    width:100%; background:var(--surface2); border:1px solid var(--border2);
+    color:var(--text); padding:0.8rem 1rem; font-family:'IBM Plex Mono',monospace;
+    font-size:0.78rem; outline:none; appearance:none; cursor:pointer;
+    transition:border-color 0.2s; margin-bottom:1rem;
   }
-
-  select:focus { border-color: var(--amber); }
-
-  .cost-display {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .cost-num {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--amber);
-    line-height: 1;
-  }
-
-  .cost-unit {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-
-  .cost-eur {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--muted2);
-    margin-left: auto;
-  }
-
+  select:focus { border-color:var(--amber); }
+  .cost-display { display:flex; align-items:baseline; gap:0.5rem; margin-bottom:1.5rem; }
+  .cost-num { font-family:'IBM Plex Mono',monospace; font-size:2rem; font-weight:700; color:var(--amber); line-height:1; }
+  .cost-unit { font-family:'IBM Plex Mono',monospace; font-size:0.75rem; color:var(--muted); text-transform:uppercase; }
+  .cost-eur  { font-family:'IBM Plex Mono',monospace; font-size:0.72rem; color:var(--muted2); margin-left:auto; }
   .run-btn {
-    width: 100%;
-    background: var(--amber);
-    color: var(--bg);
-    border: none;
-    padding: 1rem;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.82rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    cursor: pointer;
-    transition: all 0.2s;
-    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    width:100%; background:var(--amber); color:var(--bg); border:none; padding:1rem;
+    font-family:'IBM Plex Mono',monospace; font-size:0.82rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:0.1em; cursor:pointer; transition:all 0.2s;
+    clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
   }
-
-  .run-btn:hover { background: #fbbf24; transform: translateY(-1px); }
-  .run-btn:active { transform: translateY(0); }
-
+  .run-btn:hover { background:#fbbf24; transform:translateY(-1px); }
   .response-area {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 1.5rem;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.72rem;
-    line-height: 1.9;
-    min-height: 280px;
-    white-space: pre-wrap;
-    overflow-y: auto;
-    max-height: 400px;
-    transition: all 0.3s;
+    background:var(--surface); border:1px solid var(--border); padding:1.5rem;
+    font-family:'IBM Plex Mono',monospace; font-size:0.72rem; line-height:1.9;
+    min-height:280px; white-space:pre-wrap; overflow-y:auto; max-height:400px;
   }
+  .j-key{color:var(--blue)} .j-str{color:var(--green)} .j-num{color:var(--purple)}
+  .j-bool{color:var(--amber)} .j-null{color:var(--muted)} .j-punc{color:var(--muted2)}
 
-  .j-key    { color: var(--blue); }
-  .j-str    { color: var(--green); }
-  .j-num    { color: var(--purple); }
-  .j-bool   { color: var(--amber); }
-  .j-null   { color: var(--muted); }
-  .j-punc   { color: var(--muted2); }
-
-  /* ──────────────────────────────────────
-     CODE EXAMPLE
-  ────────────────────────────────────── */
-  .code-tabs {
-    display: flex;
-    gap: 0;
-    margin-bottom: 0;
-    border-bottom: 1px solid var(--border);
-  }
-
+  /* CODE TABS */
+  .code-tabs { display:flex; flex-wrap:wrap; gap:0; margin-bottom:0; border-bottom:1px solid var(--border); }
   .code-tab {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-    padding: 0.75rem 1.5rem;
-    cursor: pointer;
-    border: none;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    transition: all 0.2s;
+    font-family:'IBM Plex Mono',monospace; font-size:0.68rem; text-transform:uppercase;
+    letter-spacing:0.1em; color:var(--muted); padding:0.75rem 1.5rem; cursor:pointer;
+    border:none; background:var(--surface); border-right:1px solid var(--border); transition:all 0.2s;
   }
-
-  .code-tab.active { color: var(--amber); background: var(--bg); border-bottom: 2px solid var(--amber); margin-bottom: -1px; }
-  .code-tab:hover:not(.active) { color: var(--text); }
-
+  .code-tab.active { color:var(--amber); background:var(--bg); border-bottom:2px solid var(--amber); margin-bottom:-1px; }
+  .code-tab:hover:not(.active) { color:var(--text); }
   .code-block {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-top: none;
-    padding: 2rem;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.78rem;
-    line-height: 1.9;
-    white-space: pre;
-    overflow-x: auto;
-    display: none;
+    background:var(--surface); border:1px solid var(--border); border-top:none;
+    padding:2rem; font-family:'IBM Plex Mono',monospace; font-size:0.78rem;
+    line-height:1.9; white-space:pre; overflow-x:auto; display:none;
   }
+  @media (max-width:480px) { .code-block { padding:1.25rem; font-size:0.7rem; } }
+  .code-block.active { display:block; }
+  .c-comment{color:var(--muted2)} .c-keyword{color:var(--purple)} .c-string{color:var(--green)}
+  .c-func{color:var(--blue)} .c-var{color:var(--amber)} .c-num{color:#f9a8d4}
 
-  .code-block.active { display: block; }
-
-  .c-comment  { color: var(--muted2); }
-  .c-keyword  { color: var(--purple); }
-  .c-string   { color: var(--green); }
-  .c-func     { color: var(--blue); }
-  .c-var      { color: var(--amber); }
-  .c-num      { color: #f9a8d4; }
-
-  /* ──────────────────────────────────────
-     HOW IT WORKS
-  ────────────────────────────────────── */
+  /* HOW IT WORKS */
   .steps-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1px;
-    background: var(--border);
-    border: 1px solid var(--border);
-    margin-top: 3rem;
-    counter-reset: step;
+    display:grid; grid-template-columns:repeat(4,1fr);
+    gap:1px; background:var(--border); border:1px solid var(--border);
+    margin-top:3rem; counter-reset:step;
   }
-
-  @media (max-width: 800px) { .steps-grid { grid-template-columns: repeat(2,1fr); } }
-  @media (max-width: 480px) { .steps-grid { grid-template-columns: 1fr; } }
-
-  .step-card {
-    background: var(--bg);
-    padding: 2.5rem 2rem;
-    counter-increment: step;
-    position: relative;
-  }
-
-  .step-num {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 3.5rem;
-    font-weight: 700;
-    color: var(--border2);
-    line-height: 1;
-    margin-bottom: 1.5rem;
-  }
-
-  .step-num::before {
-    content: counter(step, decimal-leading-zero);
-  }
-
-  .step-title {
-    font-size: 1.05rem;
-    font-weight: 700;
-    margin-bottom: 0.75rem;
-    color: var(--text);
-  }
-
-  .step-desc {
-    font-size: 0.85rem;
-    color: var(--muted);
-    line-height: 1.7;
-    font-weight: 300;
-  }
-
+  @media (max-width:800px) { .steps-grid { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:480px) { .steps-grid { grid-template-columns:1fr; } }
+  .step-card { background:var(--bg); padding:2.5rem 2rem; counter-increment:step; position:relative; }
+  @media (max-width:480px) { .step-card { padding:1.5rem; } }
+  .step-num { font-family:'IBM Plex Mono',monospace; font-size:3.5rem; font-weight:700; color:var(--border2); line-height:1; margin-bottom:1.5rem; }
+  .step-num::before { content:counter(step,decimal-leading-zero); }
+  .step-title { font-size:1.05rem; font-weight:700; margin-bottom:0.75rem; color:var(--text); }
+  .step-desc  { font-size:0.85rem; color:var(--muted); line-height:1.7; font-weight:300; }
   .step-card::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 2px;
-    background: var(--amber);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.4s ease;
+    content:''; position:absolute; top:0; left:0; width:100%; height:2px;
+    background:var(--amber); transform:scaleX(0); transform-origin:left; transition:transform 0.4s ease;
   }
+  .step-card:hover::after { transform:scaleX(1); }
 
-  .step-card:hover::after { transform: scaleX(1); }
-
-  /* ──────────────────────────────────────
-     PRICING TABLE
-  ────────────────────────────────────── */
+  /* PRICING */
   .pricing-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1px;
-    background: var(--border);
-    border: 1px solid var(--border);
-    margin-top: 3rem;
+    display:grid; grid-template-columns:repeat(4,1fr);
+    gap:1px; background:var(--border); border:1px solid var(--border); margin-top:3rem;
   }
-
-  @media (max-width: 700px) { .pricing-grid { grid-template-columns: repeat(2,1fr); } }
-
-  .price-card {
-    background: var(--bg);
-    padding: 2rem 1.5rem;
-    text-align: center;
-    transition: background 0.2s;
-  }
-
-  .price-card:hover { background: var(--surface); }
-
-  .price-ep {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--muted2);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 1rem;
-  }
-
-  .price-sats {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: var(--amber);
-    line-height: 1;
-  }
-
-  .price-label {
-    font-size: 0.7rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-top: 0.4rem;
-    font-family: 'IBM Plex Mono', monospace;
-  }
-
-  .price-eur {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--muted2);
-    margin-top: 0.5rem;
-  }
-
-  /* EARNINGS CALC */
+  @media (max-width:800px) { .pricing-grid { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:400px) { .pricing-grid { grid-template-columns:1fr; } }
+  .price-card { background:var(--bg); padding:2rem 1.5rem; text-align:center; transition:background 0.2s; }
+  .price-card:hover { background:var(--surface); }
+  .price-ep    { font-family:'IBM Plex Mono',monospace; font-size:0.68rem; color:var(--muted2); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+  .price-sats  { font-family:'IBM Plex Mono',monospace; font-size:2.5rem; font-weight:700; color:var(--amber); line-height:1; }
+  .price-label { font-size:0.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-top:0.4rem; font-family:'IBM Plex Mono',monospace; }
+  .price-eur   { font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color:var(--muted2); margin-top:0.5rem; }
   .calc-box {
-    margin-top: 2rem;
-    border: 1px solid var(--border2);
-    background: var(--surface);
-    padding: 2rem;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.82rem;
-    line-height: 2.2;
+    margin-top:2rem; border:1px solid var(--border2); background:var(--surface); padding:2rem;
+    font-family:'IBM Plex Mono',monospace; font-size:0.82rem; line-height:2.2;
   }
+  .calc-row { display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding:0.4rem 0; flex-wrap:wrap; gap:0.25rem; }
+  .calc-row:last-child { border-bottom:none; font-weight:700; color:var(--green); font-size:1rem; }
+  .calc-label{color:var(--muted)} .calc-val{color:var(--text)}
 
-  .calc-row {
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    padding: 0.4rem 0;
-  }
-
-  .calc-row:last-child { border-bottom: none; font-weight: 700; color: var(--green); font-size: 1rem; }
-  .calc-label { color: var(--muted); }
-  .calc-val   { color: var(--text); }
-
-  /* ──────────────────────────────────────
-     FOR BOTS SECTION
-  ────────────────────────────────────── */
+  /* BOTS */
   .bots-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1px;
-    background: var(--border);
-    border: 1px solid var(--border);
-    margin-top: 3rem;
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:1px; background:var(--border); border:1px solid var(--border); margin-top:3rem;
   }
+  @media (max-width:600px) { .bots-grid { grid-template-columns:1fr; } }
+  .bot-card { background:var(--bg); padding:2.5rem 2rem; }
+  @media (max-width:480px) { .bot-card { padding:1.5rem; } }
+  .bot-icon-wrap { width:32px; height:32px; margin-bottom:1.25rem; color:var(--amber); opacity:0.8; }
+  .bot-title { font-size:1.1rem; font-weight:700; margin-bottom:0.75rem; }
+  .bot-desc  { font-size:0.85rem; color:var(--muted); line-height:1.7; font-weight:300; }
 
-  @media (max-width: 600px) { .bots-grid { grid-template-columns: 1fr; } }
-
-  .bot-card {
-    background: var(--bg);
-    padding: 2.5rem 2rem;
-  }
-
-  .bot-icon {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-    display: block;
-  }
-
-  .bot-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-bottom: 0.75rem;
-  }
-
-  .bot-desc {
-    font-size: 0.85rem;
-    color: var(--muted);
-    line-height: 1.7;
-    font-weight: 300;
-  }
-
-  /* ──────────────────────────────────────
-     FOOTER
-  ────────────────────────────────────── */
+  /* FOOTER */
   footer {
-    border-top: 1px solid var(--border);
-    padding: 3rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
+    border-top:1px solid var(--border); padding:2.5rem 3rem;
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.5rem;
   }
-
-  .footer-left {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--muted);
-    line-height: 2;
-  }
-
-  .footer-left strong { color: var(--amber); }
-
-  .footer-links {
-    display: flex;
-    gap: 2rem;
-    list-style: none;
-  }
-
+  @media (max-width:600px) { footer { padding:2rem 1.5rem; flex-direction:column; align-items:flex-start; } }
+  .footer-left { font-family:'IBM Plex Mono',monospace; font-size:0.75rem; color:var(--muted); line-height:2; }
+  .footer-left strong { color:var(--amber); }
+  .footer-links { display:flex; gap:2rem; list-style:none; flex-wrap:wrap; }
   .footer-links a {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--muted2);
-    text-decoration: none;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    transition: color 0.2s;
+    font-family:'IBM Plex Mono',monospace; font-size:0.68rem; color:var(--muted2);
+    text-decoration:none; text-transform:uppercase; letter-spacing:0.1em; transition:color 0.2s;
   }
-
-  .footer-links a:hover { color: var(--amber); }
-
+  .footer-links a:hover { color:var(--amber); }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
 <nav>
-  <div class="logo">
-    <div class="logo-dot"></div>
-    SATS_API
-  </div>
+  <div class="logo"><div class="logo-dot"></div>SATS_API</div>
+  <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">
+    <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
   <ul class="nav-links">
     <li><a href="#endpoints">Endpoints</a></li>
     <li><a href="#demo">Demo</a></li>
-    <li><a href="#code">Code</a></li>
+    <li><a href="/docs">Docs</a></li>
     <li><a href="#pricing">Pricing</a></li>
     <li><a href="#demo" class="nav-cta">Try Now</a></li>
   </ul>
 </nav>
 
-<!-- HERO -->
 <section class="hero" id="home">
   <div class="hero-grid"></div>
   <div class="hero-glow"></div>
-
   <div class="hero-content">
     <div class="hero-tag">Bitcoin Intelligence API · Lightning Network · L402</div>
     <h1>Market data.<br><em>Pay in sats.</em></h1>
@@ -953,107 +371,96 @@
     </p>
     <div class="hero-actions">
       <a href="#demo" class="btn-primary">Try it live →</a>
-      <a href="#code" class="btn-ghost">View code</a>
+      <a href="/docs" class="btn-ghost">View docs →</a>
     </div>
   </div>
-
   <div class="hero-stats">
-    <div class="hero-stat">
-      <div class="hero-stat-val">8</div>
-      <div class="hero-stat-label">Endpoints</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-val" id="stat-price">—</div>
-      <div class="hero-stat-label">BTC / USD</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-val" id="stat-fng">—</div>
-      <div class="hero-stat-label">Fear & Greed</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-val">L402</div>
-      <div class="hero-stat-label">Protocol</div>
-    </div>
+    <div class="hero-stat"><div class="hero-stat-val">8</div><div class="hero-stat-label">Endpoints</div></div>
+    <div class="hero-stat"><div class="hero-stat-val" id="stat-price">—</div><div class="hero-stat-label">BTC / USD</div></div>
+    <div class="hero-stat"><div class="hero-stat-val" id="stat-fng">—</div><div class="hero-stat-label">Fear & Greed</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">L402</div><div class="hero-stat-label">Protocol</div></div>
   </div>
-
   <div class="ticker-bar">
-    <div class="ticker-inner" id="ticker">
-      <div class="ticker-item"><span class="ticker-label">BTC/USD</span><span class="ticker-val" id="t-price">loading...</span></div>
-      <div class="ticker-item"><span class="ticker-label">MEMPOOL</span><span class="ticker-val" id="t-mempool">loading...</span></div>
-      <div class="ticker-item"><span class="ticker-label">BLOCK</span><span class="ticker-val" id="t-block">loading...</span></div>
-      <div class="ticker-item"><span class="ticker-label">F&G INDEX</span><span class="ticker-val" id="t-fng">loading...</span></div>
+    <div class="ticker-inner">
+      <div class="ticker-item"><span class="ticker-label">BTC/USD</span><span class="ticker-val" id="t-price">—</span></div>
+      <div class="ticker-item"><span class="ticker-label">FEES</span><span class="ticker-val" id="t-mempool">—</span></div>
+      <div class="ticker-item"><span class="ticker-label">BLOCK</span><span class="ticker-val" id="t-block">—</span></div>
+      <div class="ticker-item"><span class="ticker-label">F&G</span><span class="ticker-val" id="t-fng">—</span></div>
+      <div class="ticker-item"><span class="ticker-label">RSI 1D</span><span class="ticker-val" id="t-rsi">—</span></div>
+      <div class="ticker-item"><span class="ticker-label">TREND</span><span class="ticker-val" id="t-trend">—</span></div>
       <div class="ticker-item"><span class="ticker-label">BTC/USD</span><span class="ticker-val" id="t-price2">—</span></div>
-      <div class="ticker-item"><span class="ticker-label">MEMPOOL</span><span class="ticker-val" id="t-mempool2">—</span></div>
+      <div class="ticker-item"><span class="ticker-label">FEES</span><span class="ticker-val" id="t-mempool2">—</span></div>
       <div class="ticker-item"><span class="ticker-label">BLOCK</span><span class="ticker-val" id="t-block2">—</span></div>
-      <div class="ticker-item"><span class="ticker-label">F&G INDEX</span><span class="ticker-val" id="t-fng2">—</span></div>
+      <div class="ticker-item"><span class="ticker-label">F&G</span><span class="ticker-val" id="t-fng2">—</span></div>
+      <div class="ticker-item"><span class="ticker-label">RSI 1D</span><span class="ticker-val" id="t-rsi2">—</span></div>
+      <div class="ticker-item"><span class="ticker-label">TREND</span><span class="ticker-val" id="t-trend2">—</span></div>
     </div>
   </div>
 </section>
 
 <div class="divider"></div>
 
-<!-- ENDPOINTS -->
 <div id="endpoints">
   <div class="endpoints-header">
     <div class="section-label">Endpoints</div>
     <h2>Eight endpoints.<br><span>Real intelligence.</span></h2>
-    <p class="section-desc">Every endpoint returns structured JSON optimized for both humans and AI agents. No wrappers, no noise.</p>
+    <p class="section-desc">Every endpoint returns structured JSON optimized for both humans and AI agents.</p>
   </div>
-
   <div class="endpoints-grid">
     <div class="ep-card">
-      <div class="ep-method">GET</div>
-      <div class="ep-path">/v1/price</div>
+      <svg class="ep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"/><path d="m7 16 4-4 4 4 4-4"/></svg>
+      <div class="ep-method">GET</div><div class="ep-path">/v1/price</div>
       <div class="ep-desc">Real-time BTC price with RSI, 50/200-day moving averages, MACD bias and trend direction.</div>
-      <div class="ep-tags"><span class="ep-tag">Binance</span><span class="ep-tag">RSI</span><span class="ep-tag">MACD</span></div>
+      <div class="ep-tags"><span class="ep-tag">RSI</span><span class="ep-tag">MACD</span><span class="ep-tag">MA</span></div>
       <div class="ep-footer"><div class="ep-cost">3 sats</div><div class="ep-rate">60 req/min</div></div>
     </div>
     <div class="ep-card">
-      <div class="ep-method">GET</div>
-      <div class="ep-path">/v1/mempool</div>
+      <svg class="ep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+      <div class="ep-method">GET</div><div class="ep-path">/v1/mempool</div>
       <div class="ep-desc">Mempool status with optimal fees for 10min, 30min and 1h confirmation windows. Last block data.</div>
-      <div class="ep-tags"><span class="ep-tag">mempool.space</span><span class="ep-tag">Fees</span></div>
+      <div class="ep-tags"><span class="ep-tag">Fees</span><span class="ep-tag">Blocks</span></div>
       <div class="ep-footer"><div class="ep-cost">2 sats</div><div class="ep-rate">60 req/min</div></div>
     </div>
     <div class="ep-card">
-      <div class="ep-method">GET</div>
-      <div class="ep-path">/v1/tx/:txid</div>
+      <svg class="ep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <div class="ep-method">GET</div><div class="ep-path">/v1/tx/:txid</div>
       <div class="ep-desc">Transaction lookup by TXID. Returns status, confirmations, fee rate, inputs, outputs and block time.</div>
       <div class="ep-tags"><span class="ep-tag">Confirmed</span><span class="ep-tag">Pending</span></div>
       <div class="ep-footer"><div class="ep-cost">2 sats</div><div class="ep-rate">60 req/min</div></div>
     </div>
     <div class="ep-card">
-      <div class="ep-method">GET</div>
-      <div class="ep-path">/v1/onchain</div>
+      <svg class="ep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><path d="M18 2v4h4"/></svg>
+      <div class="ep-method">GET</div><div class="ep-path">/v1/onchain</div>
       <div class="ep-desc">Fear & Greed index with 7-day history, BTC dominance, circulating supply, hash rate and market phase detection.</div>
-      <div class="ep-tags"><span class="ep-tag">Fear&Greed</span><span class="ep-tag">Hashrate</span><span class="ep-tag">Supply</span></div>
+      <div class="ep-tags"><span class="ep-tag">Fear&Greed</span><span class="ep-tag">Hashrate</span></div>
       <div class="ep-footer"><div class="ep-cost">15 sats</div><div class="ep-rate">60 req/min</div></div>
     </div>
     <div class="ep-card">
-      <div class="ep-method">GET</div>
-      <div class="ep-path">/v1/derivatives</div>
-      <div class="ep-desc">Bybit perpetuals data: funding rate, open interest trend, long/short ratio, leverage risk assessment.</div>
-      <div class="ep-tags"><span class="ep-tag">Funding</span><span class="ep-tag">OI</span><span class="ep-tag">L/S Ratio</span></div>
+      <svg class="ep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <div class="ep-method">GET</div><div class="ep-path">/v1/derivatives</div>
+      <div class="ep-desc">Perpetuals data: funding rate, open interest trend, long/short ratio, leverage risk assessment.</div>
+      <div class="ep-tags"><span class="ep-tag">Funding</span><span class="ep-tag">OI</span><span class="ep-tag">L/S</span></div>
       <div class="ep-footer"><div class="ep-cost">15 sats</div><div class="ep-rate">60 req/min</div></div>
     </div>
     <div class="ep-card">
-      <div class="ep-method">GET</div>
-      <div class="ep-path">/v1/news</div>
+      <svg class="ep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+      <div class="ep-method">GET</div><div class="ep-path">/v1/news</div>
       <div class="ep-desc">AI-generated daily crypto news summary. Sentiment score, top 3 events and market impact analysis. Cached 6h.</div>
-      <div class="ep-tags"><span class="ep-tag">AI</span><span class="ep-tag">Sentiment</span><span class="ep-tag">Cached</span></div>
+      <div class="ep-tags"><span class="ep-tag">AI</span><span class="ep-tag">Sentiment</span><span class="ep-tag">Cached 6h</span></div>
       <div class="ep-footer"><div class="ep-cost">50 sats</div><div class="ep-rate">10 req/min</div></div>
     </div>
     <div class="ep-card">
-      <div class="ep-method">GET</div>
-      <div class="ep-path">/v1/signal</div>
+      <svg class="ep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      <div class="ep-method">GET</div><div class="ep-path">/v1/signal</div>
       <div class="ep-desc">9-factor BUY/SELL/HOLD signal with confluence score, Pi Cycle Top, multi-timeframe RSI and ATR-based trade setup.</div>
-      <div class="ep-tags"><span class="ep-tag">AI</span><span class="ep-tag">Pi Cycle</span><span class="ep-tag">ATR</span><span class="ep-tag">Multi-TF</span></div>
-      <div class="ep-footer"><div class="ep-cost">200 sats</div><div class="ep-rate">10 req/min</div></div>
+      <div class="ep-tags"><span class="ep-tag">AI</span><span class="ep-tag">Pi Cycle</span><span class="ep-tag">ATR</span></div>
+      <div class="ep-footer"><div class="ep-cost">150 sats</div><div class="ep-rate">10 req/min</div></div>
     </div>
-    <div class="ep-card" style="border: 1px solid var(--amber); background: var(--amber-glow);">
-      <div class="ep-method" style="background:var(--amber); color:var(--bg);">GET ★</div>
+    <div class="ep-card" style="border:1px solid var(--amber);background:var(--amber-glow)">
+      <svg class="ep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:1"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <div class="ep-method" style="background:var(--amber);color:var(--bg)">GET ★</div>
       <div class="ep-path">/v1/summary</div>
-      <div class="ep-desc">Everything in one call. Market score 0–100, executive summary by AI, risk matrix, key levels, bot-ready flat fields.</div>
+      <div class="ep-desc">Everything in one call. Market score 0–100, AI executive summary, risk matrix, key levels, bot-ready flat fields.</div>
       <div class="ep-tags"><span class="ep-tag">All-in-one</span><span class="ep-tag">Bot-ready</span><span class="ep-tag">Risk matrix</span></div>
       <div class="ep-footer"><div class="ep-cost">200 sats</div><div class="ep-rate">5 req/min</div></div>
     </div>
@@ -1062,15 +469,13 @@
 
 <div class="divider"></div>
 
-<!-- DEMO -->
 <section id="demo">
   <div class="section-label">Live Demo</div>
   <h2>Try it.<br><span>No signup required.</span></h2>
   <p class="section-desc">Real-time data from the live API. Every call hits satsapi.dev directly.</p>
-
   <div class="demo-layout">
     <div class="demo-panel">
-      <div class="demo-panel-label"><span></span> Select endpoint</div>
+      <div class="demo-panel-label"><div class="live-dot"></div> Select endpoint</div>
       <select id="ep-select" onchange="updateCost()">
         <option value="price">GET /v1/price</option>
         <option value="mempool">GET /v1/mempool</option>
@@ -1086,336 +491,203 @@
         <div class="cost-unit">sats / call</div>
         <div class="cost-eur" id="demo-eur">≈ 0.002€</div>
       </div>
-      <button class="run-btn" onclick="runDemo()">⚡ Execute call</button>
+      <button class="run-btn" onclick="runDemo()">Execute call →</button>
     </div>
     <div class="demo-panel">
-      <div class="demo-panel-label"><span></span> Response</div>
-      <div class="response-area" id="demo-response">// Select an endpoint and execute to see a live response...</div>
+      <div class="demo-panel-label"><div class="live-dot"></div> Response</div>
+      <div class="response-area" id="demo-response">// Select an endpoint and execute...</div>
     </div>
   </div>
 </section>
 
 <div class="divider"></div>
 
-<!-- CODE EXAMPLES -->
 <section id="code">
   <div class="section-label">Integration</div>
   <h2>Three lines.<br><span>Any language.</span></h2>
-  <p class="section-desc">SatsAPI follows standard REST conventions. If you can fetch JSON, you can use SatsAPI.</p>
-
+  <p class="section-desc">Standard REST. If you can fetch JSON, you can use SatsAPI. <a href="/docs" style="color:var(--amber);text-decoration:none">Full docs →</a></p>
   <div class="code-tabs">
-    <button class="code-tab active" onclick="showTab('js')">JavaScript</button>
-    <button class="code-tab" onclick="showTab('python')">Python</button>
-    <button class="code-tab" onclick="showTab('curl')">cURL</button>
-    <button class="code-tab" onclick="showTab('bot')">AI Agent</button>
+    <button class="code-tab active" onclick="showTab('js',event)">JavaScript</button>
+    <button class="code-tab" onclick="showTab('python',event)">Python</button>
+    <button class="code-tab" onclick="showTab('curl',event)">cURL</button>
+    <button class="code-tab" onclick="showTab('bot',event)">AI Agent</button>
   </div>
+  <div class="code-block active" id="tab-js"><span class="c-comment">// 1. Call the endpoint</span>
+<span class="c-keyword">const</span> <span class="c-var">res</span> = <span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">'https://satsapi.dev/v1/signal'</span>);
 
-  <div class="code-block active" id="tab-js"><span class="c-comment">// Fetch market signal — pay 100 sats via Lightning</span>
-<span class="c-keyword">const</span> <span class="c-var">response</span> = <span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">'https://satsapi.dev/v1/signal'</span>);
+<span class="c-comment">// 2. If 402 Payment Required, pay the Lightning invoice</span>
+<span class="c-keyword">if</span> (res.status === <span class="c-num">402</span>) {
+  <span class="c-keyword">const</span> <span class="c-var">invoice</span> = res.headers.<span class="c-func">get</span>(<span class="c-string">'WWW-Authenticate'</span>);
+  <span class="c-keyword">await</span> <span class="c-var">wallet</span>.<span class="c-func">pay</span>(<span class="c-var">invoice</span>); <span class="c-comment">// instant Lightning payment</span>
 
-<span class="c-comment">// If 402, pay the Lightning invoice first</span>
-<span class="c-keyword">if</span> (response.status === <span class="c-num">402</span>) {
-  <span class="c-keyword">const</span> <span class="c-var">invoice</span> = response.headers.<span class="c-func">get</span>(<span class="c-string">'WWW-Authenticate'</span>);
-  <span class="c-keyword">await</span> <span class="c-var">wallet</span>.<span class="c-func">pay</span>(<span class="c-var">invoice</span>); <span class="c-comment">// instant, &lt;1s</span>
+  <span class="c-comment">// 3. Repeat request with payment token</span>
   <span class="c-keyword">const</span> <span class="c-var">data</span> = <span class="c-keyword">await</span> (<span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">'https://satsapi.dev/v1/signal'</span>)).<span class="c-func">json</span>();
   console.<span class="c-func">log</span>(<span class="c-var">data</span>.data.signal); <span class="c-comment">// "BUY" | "SELL" | "HOLD"</span>
 }</div>
-
   <div class="code-block" id="tab-python"><span class="c-keyword">import</span> requests
 
-<span class="c-comment"># Fetch full market summary — 200 sats</span>
+<span class="c-comment"># 1. Call the endpoint</span>
 <span class="c-var">r</span> = requests.<span class="c-func">get</span>(<span class="c-string">"https://satsapi.dev/v1/summary"</span>)
 
+<span class="c-comment"># 2. If 402, pay the Lightning invoice</span>
 <span class="c-keyword">if</span> r.status_code == <span class="c-num">402</span>:
     <span class="c-var">invoice</span> = r.headers[<span class="c-string">"WWW-Authenticate"</span>]
-    <span class="c-var">wallet</span>.<span class="c-func">pay</span>(<span class="c-var">invoice</span>)  <span class="c-comment"># pay Lightning invoice</span>
-    <span class="c-var">data</span> = requests.<span class="c-func">get</span>(<span class="c-string">"https://satsapi.dev/v1/summary"</span>).<span class="c-func">json</span>()
-    <span class="c-func">print</span>(<span class="c-var">data</span>[<span class="c-string">"data"</span>][<span class="c-string">"bot_ready"</span>][<span class="c-string">"signal"</span>])  <span class="c-comment"># "HOLD"</span>
-    <span class="c-func">print</span>(<span class="c-var">data</span>[<span class="c-string">"data"</span>][<span class="c-string">"bot_ready"</span>][<span class="c-string">"confluence"</span>])  <span class="c-comment"># 52</span></div>
+    <span class="c-var">wallet</span>.<span class="c-func">pay</span>(<span class="c-var">invoice</span>)
 
-  <div class="code-block" id="tab-curl"><span class="c-comment"># Basic price check — 3 sats</span>
+    <span class="c-comment"># 3. Repeat request</span>
+    <span class="c-var">data</span> = requests.<span class="c-func">get</span>(<span class="c-string">"https://satsapi.dev/v1/summary"</span>).<span class="c-func">json</span>()
+    <span class="c-func">print</span>(<span class="c-var">data</span>[<span class="c-string">"data"</span>][<span class="c-string">"bot_ready"</span>][<span class="c-string">"signal"</span>])   <span class="c-comment"># "HOLD"</span></div>
+  <div class="code-block" id="tab-curl"><span class="c-comment"># Price — 3 sats</span>
 <span class="c-func">curl</span> https://satsapi.dev/v1/price
 
-<span class="c-comment"># Response: HTTP 402 + Lightning invoice in header</span>
-<span class="c-comment"># Pay invoice → repeat request → get JSON data</span>
-
-<span class="c-comment"># Full market summary — 200 sats</span>
+<span class="c-comment"># Full summary — 200 sats</span>
 <span class="c-func">curl</span> https://satsapi.dev/v1/summary
 
 <span class="c-comment"># Transaction lookup</span>
-<span class="c-func">curl</span> https://satsapi.dev/v1/tx/<span class="c-var">YOUR_TXID_HERE</span></div>
+<span class="c-func">curl</span> https://satsapi.dev/v1/tx/<span class="c-var">TXID_HERE</span>
 
-  <div class="code-block" id="tab-bot"><span class="c-comment">// AI Agent integration example (LangChain / AutoGPT)</span>
+<span class="c-comment"># Response: HTTP 402 + Lightning invoice in WWW-Authenticate header</span>
+<span class="c-comment"># Pay invoice → repeat request → receive JSON</span></div>
+  <div class="code-block" id="tab-bot"><span class="c-comment">// LangChain / AutoGPT tool definition</span>
 <span class="c-keyword">const</span> <span class="c-var">tool</span> = {
   name: <span class="c-string">"bitcoin_market_intelligence"</span>,
-  description: <span class="c-string">"Get BTC market signal, price levels, risk matrix"</span>,
+  description: <span class="c-string">"BTC signal, price levels, risk matrix. Returns bot_ready object."</span>,
   <span class="c-keyword">async</span> <span class="c-func">call</span>() {
-    <span class="c-keyword">const</span> <span class="c-var">data</span> = <span class="c-keyword">await</span> <span class="c-func">satsApiCall</span>(<span class="c-string">"/v1/summary"</span>); <span class="c-comment">// 200 sats</span>
-    <span class="c-keyword">return</span> <span class="c-var">data</span>.bot_ready; <span class="c-comment">// flat, typed, zero-parsing needed</span>
-    <span class="c-comment">// { signal: "HOLD", confluence: 52, market_score: 59,</span>
-    <span class="c-comment">//   price_usd: 67872, fear_greed: 12, ... }</span>
+    <span class="c-keyword">const</span> <span class="c-var">data</span> = <span class="c-keyword">await</span> <span class="c-func">satsApiCall</span>(<span class="c-string">"/v1/summary"</span>);
+    <span class="c-keyword">return</span> <span class="c-var">data</span>.bot_ready;
+    <span class="c-comment">// { signal:"HOLD", confluence:52, market_score:59,</span>
+    <span class="c-comment">//   price_usd:84200, fear_greed:28, support:79400 }</span>
   }
 };
-
-<span class="c-comment">// Bot pays automatically via Lightning — no human needed</span>
-<span class="c-comment">// Compatible with lnget, Aperture, LNC, WebLN</span></div>
+<span class="c-comment">// Pays automatically via L402 — no human needed</span>
+<span class="c-comment">// Compatible with: lnget · Aperture · LNC · WebLN</span></div>
 </section>
 
 <div class="divider"></div>
 
-<!-- HOW IT WORKS -->
 <section id="how">
   <div class="section-label">Protocol</div>
   <h2>How <span>L402</span> works.</h2>
-  <p class="section-desc">The Lightning Network 402 protocol makes pay-per-call APIs possible without accounts, cards or subscriptions.</p>
-
+  <p class="section-desc">The Lightning Network 402 protocol enables pay-per-call APIs without accounts, cards or subscriptions.</p>
   <div class="steps-grid">
-    <div class="step-card">
-      <div class="step-num"></div>
-      <div class="step-title">You make the request</div>
-      <div class="step-desc">Call any endpoint like a standard REST API. The server responds with HTTP 402 and a Lightning invoice in the header.</div>
-    </div>
-    <div class="step-card">
-      <div class="step-num"></div>
-      <div class="step-title">Pay the invoice</div>
-      <div class="step-desc">Your Lightning wallet (or agent) pays the invoice in milliseconds. No redirects. No waiting. No account needed.</div>
-    </div>
-    <div class="step-card">
-      <div class="step-num"></div>
-      <div class="step-title">Receive the data</div>
-      <div class="step-desc">The server verifies payment and returns the full JSON response. The entire cycle takes under one second.</div>
-    </div>
-    <div class="step-card">
-      <div class="step-num"></div>
-      <div class="step-title">Bots pay automatically</div>
-      <div class="step-desc">AI agents using lnget or WebLN complete the payment loop without human intervention. True autonomous API consumption.</div>
-    </div>
+    <div class="step-card"><div class="step-num"></div><div class="step-title">Make the request</div><div class="step-desc">Call any endpoint like a standard REST API. The server responds with HTTP 402 and a Lightning invoice in the header.</div></div>
+    <div class="step-card"><div class="step-num"></div><div class="step-title">Pay the invoice</div><div class="step-desc">Your Lightning wallet (or agent) pays the invoice in milliseconds. No redirects. No waiting. No account needed.</div></div>
+    <div class="step-card"><div class="step-num"></div><div class="step-title">Receive the data</div><div class="step-desc">The server verifies payment and returns the full JSON response. The entire cycle takes under one second.</div></div>
+    <div class="step-card"><div class="step-num"></div><div class="step-title">Bots pay automatically</div><div class="step-desc">AI agents using lnget or WebLN complete the payment loop without human intervention. True autonomous API consumption.</div></div>
   </div>
 </section>
 
 <div class="divider"></div>
 
-<!-- FOR BOTS -->
 <section id="bots">
   <div class="section-label">AI Agents</div>
   <h2>Built for <span>bots.</span></h2>
-  <p class="section-desc">Every response includes a <code style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:0.9em">bot_ready</code> object — a flat, typed payload with zero parsing required.</p>
-
+  <p class="section-desc">Every response includes a <code style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:0.9em">bot_ready</code> object — flat, typed, zero parsing required.</p>
   <div class="bots-grid">
     <div class="bot-card">
-      <span class="bot-icon">⚡</span>
+      <svg class="bot-icon-wrap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
       <div class="bot-title">Native Lightning payments</div>
-      <div class="bot-desc">Agents pay via L402 without human involvement. Compatible with lnget, Aperture, LNC and WebLN. No API key management, no rate limit tiers to negotiate.</div>
+      <div class="bot-desc">Agents pay via L402 without human involvement. Compatible with lnget, Aperture, LNC and WebLN. No API key management.</div>
     </div>
     <div class="bot-card">
-      <span class="bot-icon">🤖</span>
+      <svg class="bot-icon-wrap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
       <div class="bot-title">Flat bot_ready fields</div>
-      <div class="bot-desc"><code style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:0.85em">if (data.signal === 'BUY' && data.confluence > 65)</code> — that's all your agent needs. No nested parsing, no normalization, no guesswork.</div>
+      <div class="bot-desc"><code style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:0.82em">if (data.signal === 'BUY' && data.confluence > 65)</code> — that's it. No nested parsing, no normalization.</div>
     </div>
     <div class="bot-card">
-      <span class="bot-icon">📊</span>
+      <svg class="bot-icon-wrap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <div class="bot-title">Structured for LLM context</div>
-      <div class="bot-desc">The executive_summary field provides analyst-grade narrative in plain English, ready to inject directly into an LLM prompt for downstream reasoning.</div>
+      <div class="bot-desc">The executive_summary field provides analyst-grade narrative ready to inject directly into an LLM prompt for downstream reasoning.</div>
     </div>
     <div class="bot-card">
-      <span class="bot-icon">🛡️</span>
+      <svg class="bot-icon-wrap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       <div class="bot-title">Predictable rate limits</div>
-      <div class="bot-desc">Clear per-endpoint limits returned in headers. Your agent always knows how fast it can call and plans accordingly. No surprise 429s mid-strategy.</div>
+      <div class="bot-desc">Clear per-endpoint limits returned in headers. Your agent always knows how fast it can call. No surprise 429s mid-strategy.</div>
     </div>
   </div>
 </section>
 
 <div class="divider"></div>
 
-<!-- PRICING -->
 <section id="pricing">
   <div class="section-label">Pricing</div>
   <h2>Pay exactly<br><span>what you use.</span></h2>
   <p class="section-desc">No monthly fees. No tiers. No surprises. Each call costs a fixed number of satoshis, settled instantly on Lightning.</p>
-
   <div class="pricing-grid">
-    <div class="price-card">
-      <div class="price-ep">/v1/price</div>
-      <div class="price-sats">3</div>
-      <div class="price-label">sats / call</div>
-      <div class="price-eur">≈ 0.002€</div>
+    <div class="price-card"><div class="price-ep">/v1/price</div><div class="price-sats">3</div><div class="price-label">sats / call</div><div class="price-eur">≈ 0.002€</div></div>
+    <div class="price-card"><div class="price-ep">/v1/mempool + /v1/tx</div><div class="price-sats">2</div><div class="price-label">sats / call</div><div class="price-eur">≈ 0.002€</div></div>
+    <div class="price-card"><div class="price-ep">/v1/onchain + derivatives</div><div class="price-sats">15</div><div class="price-label">sats / call</div><div class="price-eur">≈ 0.012€</div></div>
+    <div class="price-card"><div class="price-ep">/v1/news</div><div class="price-sats">50</div><div class="price-label">sats / call</div><div class="price-eur">≈ 0.040€</div></div>
+    <div class="price-card"><div class="price-ep">/v1/signal</div><div class="price-sats">150</div><div class="price-label">sats / call</div><div class="price-eur">≈ 0.120€</div></div>
+    <div class="price-card" style="border:1px solid var(--amber);background:var(--amber-glow)">
+      <div class="price-ep">/v1/summary ★</div><div class="price-sats" style="font-size:2rem">200</div>
+      <div class="price-label">sats / call</div><div class="price-eur">≈ 0.160€</div>
     </div>
-    <div class="price-card">
-      <div class="price-ep">/v1/mempool + /v1/tx</div>
-      <div class="price-sats">2</div>
-      <div class="price-label">sats / call</div>
-      <div class="price-eur">≈ 0.002€</div>
-    </div>
-    <div class="price-card">
-      <div class="price-ep">/v1/onchain + derivatives</div>
-      <div class="price-sats">15</div>
-      <div class="price-label">sats / call</div>
-      <div class="price-eur">≈ 0.012€</div>
-    </div>
-    <div class="price-card">
-      <div class="price-ep">/v1/news</div>
-      <div class="price-sats">50</div>
-      <div class="price-label">sats / call</div>
-      <div class="price-eur">≈ 0.040€</div>
-    </div>
-    <div class="price-card">
-      <div class="price-ep">/v1/signal</div>
-      <div class="price-sats">150</div>
-      <div class="price-label">sats / call</div>
-      <div class="price-eur">≈ 0.160€</div>
-    </div>
-    <div class="price-card" style="border:1px solid var(--amber); background:var(--amber-glow);">
-      <div class="price-ep">/v1/summary ★</div>
-      <div class="price-sats" style="font-size:2rem">200</div>
-      <div class="price-label">sats / call</div>
-      <div class="price-eur">≈ 0.160€</div>
-    </div>
-    <div class="price-card" style="grid-column: span 2; text-align:left; padding:2rem;">
-      <div style="font-family:'IBM Plex Mono',monospace; font-size:0.72rem; color:var(--muted); line-height:2.2">
+    <div class="price-card" style="grid-column:span 2;text-align:left;padding:2rem">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--muted);line-height:2.2">
         vs. Glassnode Pro: <span style="color:var(--red)">$29/month ($0.97/day)</span><br>
         vs. CryptoQuant: <span style="color:var(--red)">$20/month ($0.67/day)</span><br>
         SatsAPI at 500 calls/day avg mix: <span style="color:var(--green)">~$0.12/day ($3.60/month)</span>
       </div>
     </div>
   </div>
-
   <div class="calc-box">
     <div class="calc-row"><span class="calc-label">1,000 calls/day · avg 55 sats/call</span><span class="calc-val">55,000 sats/day</span></div>
-    <div class="calc-row"><span class="calc-label">BTC at $68,000</span><span class="calc-val">≈ $37.40 / day</span></div>
-    <div class="calc-row"><span class="calc-label">Monthly revenue estimate</span><span class="calc-val">≈ $1,122 / month</span></div>
+    <div class="calc-row"><span class="calc-label">BTC at $84,000</span><span class="calc-val">≈ $46.20 / day</span></div>
+    <div class="calc-row"><span class="calc-label">Monthly revenue estimate</span><span class="calc-val">≈ $1,386 / month</span></div>
     <div class="calc-row"><span class="calc-label">Hosting cost (Railway)</span><span class="calc-val">−$5 / month</span></div>
-    <div class="calc-row"><span class="calc-label">Net at 1,000 calls/day</span><span class="calc-val calc-green">≈ $1,117 / month in BTC</span></div>
+    <div class="calc-row"><span class="calc-label">Net at 1,000 calls/day</span><span class="calc-val">≈ $1,381 / month in BTC</span></div>
   </div>
 </section>
 
 <div class="divider"></div>
 
-<!-- FOOTER -->
 <footer>
   <div class="footer-left">
     <strong>SATS_API</strong> · Bitcoin market intelligence · Pay per call · Lightning Network · L402<br>
-    Built on: Binance · Bybit · mempool.space · Alternative.me · CoinGecko · Claude AI
+    Data: CryptoCompare · mempool.space · Alternative.me · CoinGecko · Claude AI
   </div>
   <ul class="footer-links">
     <li><a href="#endpoints">Endpoints</a></li>
-    <li><a href="#code">Docs</a></li>
+    <li><a href="/docs">Docs</a></li>
     <li><a href="#pricing">Pricing</a></li>
-    <li><a href="https://github.com/satsapi" target="_blank">GitHub</a></li>
+    <li><a href="https://github.com/Aperezvigoa/satsapi" target="_blank">GitHub</a></li>
   </ul>
 </footer>
 
 <script>
-// ── DEMO RESPONSES ──
-const costs = { price:3, mempool:2, tx:2, onchain:15, derivatives:15, news:50, signal:150, summary:200 };
+const API = 'https://satsapi.dev';
+const costs = {price:3,mempool:2,tx:2,onchain:15,derivatives:15,news:50,signal:150,summary:200};
 const eursPerSat = 0.00082;
-
-const demos = {
-  price: () => ({
-    endpoint:'/v1/price', cost_sats:3,
-    data:{ symbol:'BTC/USD', price:67872.13, change_24h:'-0.88%', high_24h:68583.28, low_24h:67446.41,
-      volume_24h:'$38.2B', ma_50:74791.14, ma_200:95681.40, rsi_14:49.8, trend:'BEARISH', macd_bias:'BEARISH' },
-    timestamp: new Date().toISOString()
-  }),
-  mempool: () => ({
-    endpoint:'/v1/mempool', cost_sats:2,
-    data:{ pending_txs:24797, pending_size:'24.1 MB', congestion:'LOW',
-      fees:{ fast_10min:'2 sat/vB', medium_30min:'1 sat/vB', slow_1h:'1 sat/vB', minimum:'1 sat/vB' },
-      last_block:{ height:939741, tx_count:812, size_kb:'398.4 KB' }},
-    timestamp: new Date().toISOString()
-  }),
-  tx: () => ({
-    endpoint:'/v1/tx/:txid', cost_sats:2,
-    data:{ txid:'a1b2c3...f6e7', status:'CONFIRMED', confirmations:14, block_height:939725,
-      fee_sats:1240, fee_rate:'12 sat/vB', size_bytes:225, inputs:1, outputs:2, value_btc:'0.00285000' },
-    timestamp: new Date().toISOString()
-  }),
-  onchain: () => ({
-    endpoint:'/v1/onchain', cost_sats:15,
-    data:{ fear_and_greed:{ value:12, label:'Extreme Fear', trend:'DETERIORATING', yesterday:18, week_ago:14 },
-      dominance:{ btc_dominance:'56.6%', altcoin_season:false, total_market_cap_trillion:2.4 },
-      supply:{ circulating_btc:19999143, remaining_btc:1000857, percent_mined:'95.23%', max_supply:21000000 },
-      network:{ hashrate_eh:1051.3, hashrate_trend:'INCREASING' },
-      market_phase:{ phase:'EXTREME_FEAR', note:'Maximum pessimism — historically best buying opportunities' }},
-    timestamp: new Date().toISOString()
-  }),
-  derivatives: () => ({
-    endpoint:'/v1/derivatives', cost_sats:15,
-    data:{ funding_rate:{ current_pct:-0.0007, annualized_pct:-0.8, bias:'NEUTRAL' },
-      open_interest:{ btc:48133, usd_billion:3.27, trend:'DECREASING' },
-      long_short:{ long_pct:64.2, short_pct:35.8, sentiment:'MAJORITY_LONG', note:'Over 60% accounts long — contrarian bearish signal' },
-      leverage_risk:'LOW' },
-    timestamp: new Date().toISOString()
-  }),
-  news: () => ({
-    endpoint:'/v1/news', cost_sats:50, cached:true,
-    data:{ sentiment:'BEARISH', score:0.3,
-      summary:'Bitcoin faces significant selling pressure with $349M in ETF outflows and 27,000 BTC moved to exchanges by short-term holders.',
-      top_events:['ETF outflows hit $349M — institutional demand pause','27K BTC sent to exchanges by short-term holders','Stagflation fears dampen risk appetite'] },
-    timestamp: new Date().toISOString()
-  }),
-  signal: () => ({
-    endpoint:'/v1/signal', cost_sats:150,
-    data:{ signal:'HOLD', confluence:52, confidence:0.518, risk_level:'HIGH',
-      reasoning:'HOLD at $67,872 with 52% confluence — 4H RSI at 6.2 signals extreme short-term oversold while bearish MA trend and negative news create conflicting pressure. Watch for 4H RSI recovery above 30 to confirm directional bias.',
-      historical_context:'F&G below 20 preceded +40% BTC gains within 90 days in 7 of 9 occurrences since 2019.',
-      trade_setup: null,
-      technicals:{ price_usd:67872.13, rsi_1d:49.8, rsi_4h:6.2, rsi_1h:42.8, pi_cycle_ratio_pct:41.94, atr_14d:3518.49 }},
-    timestamp: new Date().toISOString()
-  }),
-  summary: () => ({
-    endpoint:'/v1/summary', cost_sats:200,
-    data:{ market_score:59, market_score_label:'NEUTRAL',
-      executive_summary:'Bitcoin consolidates at $67,872 in extreme fear (F&G: 12) with hash rate at ATH 1,051 EH/s, creating a classic divergence between network strength and price sentiment. Critical support at $60,835 — a break below would likely trigger capitulation toward $57,300. With 64.2% of accounts long and open interest decreasing, derivatives signal exhaustion of sellers but insufficient buyer conviction. Accumulate 25% position on dips toward $60,835 with hard stops at $58,000.',
-      bot_ready:{ signal:'HOLD', confluence:52, market_score:59, price_usd:67872.13, rsi_1d:49.8, rsi_4h:6.2,
-        fear_greed:12, fear_greed_label:'Extreme Fear', funding_bias:'NEUTRAL', long_pct:64.2,
-        leverage_risk:'LOW', support:60835.15, resistance:74791.12, highest_risk:'OPPORTUNITY' },
-      risk_matrix:[{ level:'OPPORTUNITY', note:'F&G at 12 — historically strong accumulation zone' },
-        { level:'OPPORTUNITY', note:'4H RSI at 6.2 — extreme short-term oversold' }]},
-    timestamp: new Date().toISOString()
-  })
-};
 
 function syntaxHighlight(json) {
   const str = JSON.stringify(json, null, 2);
-  return str
-    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
-      if (/^"/.test(m)) {
-        if (/:$/.test(m)) return `<span class="j-key">${m}</span>`;
-        return `<span class="j-str">${m}</span>`;
-      }
-      if (/true|false/.test(m)) return `<span class="j-bool">${m}</span>`;
-      if (/null/.test(m))       return `<span class="j-null">${m}</span>`;
-      return `<span class="j-num">${m}</span>`;
-    })
-    .replace(/[{}\[\],]/g, m => `<span class="j-punc">${m}</span>`);
+  return str.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+    if (/^"/.test(m)) return /:$/.test(m) ? `<span class="j-key">${m}</span>` : `<span class="j-str">${m}</span>`;
+    if (/true|false/.test(m)) return `<span class="j-bool">${m}</span>`;
+    if (/null/.test(m)) return `<span class="j-null">${m}</span>`;
+    return `<span class="j-num">${m}</span>`;
+  }).replace(/[{}\[\],]/g, m => `<span class="j-punc">${m}</span>`);
 }
 
 function updateCost() {
   const ep = document.getElementById('ep-select').value;
   const sats = costs[ep];
   document.getElementById('demo-cost').textContent = sats;
-  document.getElementById('demo-eur').textContent = `≈ ${(sats * eursPerSat).toFixed(3)}€`;
+  document.getElementById('demo-eur').textContent = `≈ ${(sats*eursPerSat).toFixed(3)}€`;
 }
 
 async function runDemo() {
-  const ep = document.getElementById('ep-select').value;
+  const ep  = document.getElementById('ep-select').value;
   const box = document.getElementById('demo-response');
-  box.style.color = 'var(--muted)';
-  box.innerHTML = '<span style="color:var(--amber)">⚡ Calling satsapi.dev...</span>';
-  
+  box.innerHTML = '<span style="color:var(--amber)">// Fetching live data from satsapi.dev...</span>';
+  const paths = {
+    price:'/v1/price', mempool:'/v1/mempool', onchain:'/v1/onchain',
+    derivatives:'/v1/derivatives', news:'/v1/news', signal:'/v1/signal', summary:'/v1/summary',
+    tx:'/v1/tx/4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b'
+  };
   try {
-    const endpoints = {
-      price:       '/v1/price',
-      mempool:     '/v1/mempool',
-      onchain:     '/v1/onchain',
-      derivatives: '/v1/derivatives',
-      news:        '/v1/news',
-      signal:      '/v1/signal',
-      summary:     '/v1/summary',
-      tx:          '/v1/tx/4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b'
-    };
-
-    const res  = await fetch(`https://satsapi.dev${endpoints[ep]}`);
+    const res  = await fetch(`${API}${paths[ep]}`);
     const data = await res.json();
     box.style.color = 'var(--text)';
     box.innerHTML = syntaxHighlight(data);
@@ -1424,57 +696,48 @@ async function runDemo() {
   }
 }
 
-function showTab(id) {
+function showTab(id, e) {
   document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.code-block').forEach(b => b.classList.remove('active'));
-  document.querySelector(`#tab-${id}`).classList.add('active');
-  event.target.classList.add('active');
+  document.getElementById(`tab-${id}`).classList.add('active');
+  e.target.classList.add('active');
 }
 
-// ── LIVE DATA ──
 async function fetchLiveData() {
   try {
-    const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
-    const d = await r.json();
-    const price = parseFloat(d.lastPrice).toLocaleString('en-US', { style:'currency', currency:'USD', maximumFractionDigits:0 });
-    const chg   = parseFloat(d.priceChangePercent).toFixed(2);
-    const cls   = chg > 0 ? 'ticker-up' : 'ticker-down';
-    const sign  = chg > 0 ? '+' : '';
-    ['t-price','t-price2'].forEach(id => {
-      document.getElementById(id).innerHTML = `${price} <span class="${cls}">(${sign}${chg}%)</span>`;
-    });
-    document.getElementById('stat-price').textContent = price;
-  } catch(e) {}
-
-  try {
-    const r2 = await fetch('https://mempool.space/api/v1/fees/recommended');
-    const d2  = await r2.json();
-    const txt = `Fast: ${d2.fastestFee} sat/vB`;
-    ['t-mempool','t-mempool2'].forEach(id => document.getElementById(id).textContent = txt);
-  } catch(e) {}
-
-  try {
-    const r3 = await fetch('https://mempool.space/api/blocks/tip/height');
-    const h   = await r3.text();
-    const txt = `#${parseInt(h).toLocaleString()}`;
-    ['t-block','t-block2'].forEach(id => document.getElementById(id).textContent = txt);
-  } catch(e) {}
-
-  try {
-    const r4 = await fetch('https://api.alternative.me/fng/?limit=1');
-    const d4  = await r4.json();
-    const val = d4.data[0].value;
-    const lbl = d4.data[0].value_classification;
-    const cls = val < 35 ? 'ticker-down' : val > 65 ? 'ticker-up' : 'ticker-val';
-    ['t-fng','t-fng2'].forEach(id => {
-      document.getElementById(id).innerHTML = `<span class="${cls}">${val} — ${lbl}</span>`;
-    });
-    document.getElementById('stat-fng').textContent = val;
+    const [pR, mR, oR] = await Promise.allSettled([
+      fetch(`${API}/v1/price`), fetch(`${API}/v1/mempool`), fetch(`${API}/v1/onchain`)
+    ]);
+    if (pR.status === 'fulfilled') {
+      const d = await pR.value.json(), p = d.data;
+      const price = '$' + parseFloat(p.price).toLocaleString('en-US',{maximumFractionDigits:0});
+      const chg = parseFloat(p.change_24h), cls = chg > 0 ? 'ticker-up' : 'ticker-down';
+      const sign = chg > 0 ? '+' : '';
+      ['t-price','t-price2'].forEach(id => {
+        document.getElementById(id).innerHTML = `${price} <span class="${cls}">(${sign}${p.change_24h})</span>`;
+      });
+      document.getElementById('stat-price').textContent = price;
+      const rCls = p.rsi_14 < 35 ? 'ticker-down' : p.rsi_14 > 65 ? 'ticker-up' : 'ticker-val';
+      ['t-rsi','t-rsi2'].forEach(id => { document.getElementById(id).innerHTML = `<span class="${rCls}">${p.rsi_14}</span>`; });
+      const tCls = p.trend === 'BULLISH' ? 'ticker-up' : p.trend === 'BEARISH' ? 'ticker-down' : 'ticker-val';
+      ['t-trend','t-trend2'].forEach(id => { document.getElementById(id).innerHTML = `<span class="${tCls}">${p.trend}</span>`; });
+    }
+    if (mR.status === 'fulfilled') {
+      const d = await mR.value.json(), p = d.data;
+      ['t-mempool','t-mempool2'].forEach(id => document.getElementById(id).textContent = `Fast: ${p.fees.fast_10min}`);
+      ['t-block','t-block2'].forEach(id => document.getElementById(id).textContent = `#${p.last_block.height.toLocaleString()}`);
+    }
+    if (oR.status === 'fulfilled') {
+      const d = await oR.value.json(), p = d.data;
+      const val = p.fear_and_greed.value, lbl = p.fear_and_greed.label;
+      const cls = val < 35 ? 'ticker-down' : val > 65 ? 'ticker-up' : 'ticker-val';
+      ['t-fng','t-fng2'].forEach(id => { document.getElementById(id).innerHTML = `<span class="${cls}">${val} — ${lbl}</span>`; });
+      document.getElementById('stat-fng').textContent = val;
+    }
   } catch(e) {}
 }
-
 fetchLiveData();
-setInterval(fetchLiveData, 30000);
+setInterval(fetchLiveData, 60000);
 </script>
 </body>
 </html>

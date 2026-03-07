@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="SatsAPI Documentation — Complete reference for all endpoints, L402 authentication, code examples and AI agent integration.">
+<title>SatsAPI — Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;700&family=Barlow:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#060608; --surface:#0d0d10; --surface2:#141418;
+    --border:#1e1e24; --border2:#2a2a33;
+    --amber:#f59e0b; --amber-dim:#f59e0b22; --amber-glow:#f59e0b0a;
+    --text:#e2e0d8; --muted:#6b6a72; --muted2:#4a4952;
+    --green:#34d399; --red:#f87171; --blue:#60a5fa; --purple:#a78bfa;
+    --sidebar-w: 260px;
+  }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--bg); color:var(--text); font-family:'Barlow',sans-serif; overflow-x:hidden; }
+
+  /* SCANLINES */
+  body::after {
+    content:''; position:fixed; inset:0;
+    background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);
+    pointer-events:none; z-index:999;
+  }
+
+  /* TOP NAV */
+  .topnav {
+    position:fixed; top:0; left:0; right:0; z-index:200;
+    height:56px; display:flex; align-items:center; justify-content:space-between;
+    padding:0 2rem; background:rgba(6,6,8,0.95); backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--border);
+  }
+  .logo { font-family:'IBM Plex Mono',monospace; font-size:0.95rem; font-weight:700; color:var(--amber); text-decoration:none; display:flex; align-items:center; gap:0.5rem; }
+  .logo-dot { width:7px; height:7px; background:var(--amber); border-radius:50%; animation:pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.8)} }
+  .topnav-links { display:flex; gap:1.5rem; list-style:none; align-items:center; }
+  .topnav-links a { font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color:var(--muted); text-decoration:none; text-transform:uppercase; letter-spacing:0.1em; transition:color 0.2s; }
+  .topnav-links a:hover { color:var(--text); }
+  .topnav-cta { color:var(--bg) !important; background:var(--amber) !important; padding:0.4rem 1rem; }
+  .topnav-cta:hover { background:#fbbf24 !important; }
+  .mobile-menu-btn { display:none; background:none; border:none; cursor:pointer; }
+  .mobile-menu-btn svg { width:20px; height:20px; stroke:var(--text); stroke-width:2; fill:none; }
+
+  /* LAYOUT */
+  .docs-layout { display:flex; padding-top:56px; min-height:100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width:var(--sidebar-w); flex-shrink:0; position:fixed; top:56px; left:0; bottom:0;
+    overflow-y:auto; background:var(--surface); border-right:1px solid var(--border);
+    padding:2rem 0; z-index:100;
+  }
+  .sidebar::-webkit-scrollbar { width:4px; }
+  .sidebar::-webkit-scrollbar-track { background:transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+
+  .sidebar-section { margin-bottom:2rem; }
+  .sidebar-title {
+    font-family:'IBM Plex Mono',monospace; font-size:0.6rem; color:var(--amber);
+    text-transform:uppercase; letter-spacing:0.2em; padding:0 1.5rem; margin-bottom:0.75rem;
+  }
+  .sidebar-link {
+    display:block; padding:0.5rem 1.5rem; font-family:'IBM Plex Mono',monospace;
+    font-size:0.72rem; color:var(--muted); text-decoration:none; transition:all 0.15s;
+    border-left:2px solid transparent;
+  }
+  .sidebar-link:hover { color:var(--text); background:var(--surface2); }
+  .sidebar-link.active { color:var(--amber); border-left-color:var(--amber); background:var(--amber-glow); }
+  .sidebar-link .method-badge {
+    font-size:0.55rem; background:var(--amber-dim); color:var(--amber);
+    padding:0.1rem 0.4rem; margin-right:0.4rem; text-transform:uppercase;
+  }
+
+  /* MAIN CONTENT */
+  .docs-main { margin-left:var(--sidebar-w); flex:1; padding:3rem 4rem; max-width:900px; }
+
+  /* SECTIONS */
+  .doc-section { margin-bottom:5rem; scroll-margin-top:80px; }
+  .doc-section h1 { font-size:clamp(2rem,4vw,3.5rem); font-weight:900; letter-spacing:-0.03em; margin-bottom:0.75rem; }
+  .doc-section h1 span { color:var(--amber); }
+  .doc-section h2 { font-size:1.6rem; font-weight:800; letter-spacing:-0.02em; margin:3rem 0 1rem; }
+  .doc-section h2 span { color:var(--amber); }
+  .doc-section h3 { font-size:1.1rem; font-weight:700; margin:2rem 0 0.75rem; color:var(--text); }
+  .doc-section p { font-size:0.95rem; color:var(--muted); line-height:1.8; margin-bottom:1rem; font-weight:300; }
+  .doc-section p strong { color:var(--text); font-weight:600; }
+  .doc-section p a { color:var(--amber); text-decoration:none; }
+  .doc-section p a:hover { text-decoration:underline; }
+
+  .section-divider { border:none; border-top:1px solid var(--border); margin:4rem 0; }
+
+  /* ENDPOINT REFERENCE CARD */
+  .ep-ref {
+    border:1px solid var(--border); margin-bottom:3rem; overflow:hidden;
+  }
+  .ep-ref-header {
+    display:flex; align-items:center; gap:1rem; padding:1.25rem 1.5rem;
+    background:var(--surface); border-bottom:1px solid var(--border); flex-wrap:wrap; gap:0.75rem;
+  }
+  .ep-badge {
+    font-family:'IBM Plex Mono',monospace; font-size:0.65rem; font-weight:700;
+    background:var(--amber-dim); color:var(--amber); padding:0.3rem 0.75rem;
+    text-transform:uppercase; letter-spacing:0.1em;
+  }
+  .ep-ref-path { font-family:'IBM Plex Mono',monospace; font-size:1rem; font-weight:500; color:var(--text); }
+  .ep-cost-badge {
+    font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color:var(--amber);
+    border:1px solid var(--amber-dim); padding:0.25rem 0.75rem; margin-left:auto;
+  }
+  .ep-ref-body { padding:1.5rem; }
+  .ep-desc-text { font-size:0.9rem; color:var(--muted); line-height:1.7; margin-bottom:1.5rem; font-weight:300; }
+
+  /* TABLES */
+  .ref-table { width:100%; border-collapse:collapse; margin:1rem 0 1.5rem; font-size:0.82rem; }
+  .ref-table th {
+    font-family:'IBM Plex Mono',monospace; font-size:0.62rem; text-transform:uppercase;
+    letter-spacing:0.1em; color:var(--muted2); border-bottom:1px solid var(--border);
+    padding:0.5rem 0.75rem; text-align:left; background:var(--surface);
+  }
+  .ref-table td { padding:0.6rem 0.75rem; border-bottom:1px solid var(--border); vertical-align:top; }
+  .ref-table tr:last-child td { border-bottom:none; }
+  .ref-table tr:hover td { background:var(--surface2); }
+  .param-name { font-family:'IBM Plex Mono',monospace; color:var(--blue); font-size:0.8rem; }
+  .param-type { font-family:'IBM Plex Mono',monospace; color:var(--purple); font-size:0.75rem; }
+  .param-desc { color:var(--muted); font-weight:300; }
+
+  /* CODE BLOCKS */
+  .code-wrap {
+    background:var(--surface); border:1px solid var(--border);
+    overflow-x:auto; margin:1rem 0 1.5rem;
+  }
+  .code-header {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:0.6rem 1rem; border-bottom:1px solid var(--border); background:var(--surface2);
+  }
+  .code-lang { font-family:'IBM Plex Mono',monospace; font-size:0.62rem; color:var(--muted2); text-transform:uppercase; letter-spacing:0.1em; }
+  .copy-btn {
+    font-family:'IBM Plex Mono',monospace; font-size:0.62rem; color:var(--muted);
+    background:none; border:1px solid var(--border2); padding:0.25rem 0.75rem; cursor:pointer;
+    transition:all 0.2s; text-transform:uppercase; letter-spacing:0.08em;
+  }
+  .copy-btn:hover { color:var(--amber); border-color:var(--amber); }
+  pre {
+    padding:1.25rem 1.5rem; font-family:'IBM Plex Mono',monospace;
+    font-size:0.78rem; line-height:1.8; white-space:pre; overflow-x:auto; margin:0;
+  }
+  @media (max-width:600px) { pre { font-size:0.7rem; padding:1rem; } }
+  .c-comment{color:var(--muted2)} .c-key{color:var(--blue)} .c-str{color:var(--green)}
+  .c-num{color:var(--purple)} .c-kw{color:#a78bfa)} .c-fn{color:var(--blue)}
+  .c-bool{color:var(--amber)} .c-null{color:var(--muted)}
+
+  /* RESPONSE EXAMPLE */
+  .res-example {
+    background:var(--surface); border:1px solid var(--border); margin:1rem 0 1.5rem;
+  }
+  .res-header {
+    padding:0.6rem 1rem; border-bottom:1px solid var(--border); background:var(--surface2);
+    display:flex; gap:1rem; align-items:center;
+  }
+  .res-status { font-family:'IBM Plex Mono',monospace; font-size:0.7rem; }
+  .status-200 { color:var(--green); }
+  .status-402 { color:var(--amber); }
+  .status-429 { color:var(--red); }
+
+  /* CALLOUT BOXES */
+  .callout {
+    border-left:3px solid; padding:1rem 1.25rem; margin:1.5rem 0;
+    font-size:0.88rem; line-height:1.7; font-weight:300;
+  }
+  .callout-info    { border-color:var(--blue);   background:rgba(96,165,250,0.06);  color:var(--text); }
+  .callout-warning { border-color:var(--amber);  background:var(--amber-glow);       color:var(--text); }
+  .callout-success { border-color:var(--green);  background:rgba(52,211,153,0.06);  color:var(--text); }
+  .callout-title   { font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.4rem; }
+  .callout-info .callout-title    { color:var(--blue); }
+  .callout-warning .callout-title { color:var(--amber); }
+  .callout-success .callout-title { color:var(--green); }
+
+  /* TABS */
+  .tab-bar { display:flex; flex-wrap:wrap; border-bottom:1px solid var(--border); margin-bottom:0; }
+  .tab-btn {
+    font-family:'IBM Plex Mono',monospace; font-size:0.68rem; text-transform:uppercase;
+    letter-spacing:0.1em; color:var(--muted); padding:0.65rem 1.25rem; cursor:pointer;
+    border:none; background:var(--surface); border-right:1px solid var(--border); transition:all 0.2s;
+  }
+  .tab-btn.active { color:var(--amber); background:var(--bg); border-bottom:2px solid var(--amber); margin-bottom:-1px; }
+  .tab-btn:hover:not(.active) { color:var(--text); }
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
+
+  /* ERROR TABLE */
+  .error-row td:first-child { font-family:'IBM Plex Mono',monospace; font-weight:700; }
+
+  /* RATE LIMIT BAR */
+  .rate-table { width:100%; border-collapse:collapse; font-size:0.82rem; margin:1rem 0; }
+  .rate-table th { font-family:'IBM Plex Mono',monospace; font-size:0.62rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted2); border-bottom:1px solid var(--border); padding:0.5rem 0.75rem; text-align:left; background:var(--surface); }
+  .rate-table td { padding:0.6rem 0.75rem; border-bottom:1px solid var(--border); }
+  .rate-table tr:last-child td { border-bottom:none; }
+  .rate-label { font-family:'IBM Plex Mono',monospace; font-size:0.75rem; color:var(--amber); }
+
+  /* BOT FLOW */
+  .flow-steps { display:flex; flex-direction:column; gap:0; border:1px solid var(--border); margin:1.5rem 0; }
+  .flow-step {
+    display:flex; align-items:flex-start; gap:1.5rem; padding:1.25rem 1.5rem;
+    border-bottom:1px solid var(--border); background:var(--surface);
+  }
+  .flow-step:last-child { border-bottom:none; }
+  .flow-step:hover { background:var(--surface2); }
+  .flow-num {
+    font-family:'IBM Plex Mono',monospace; font-size:1.4rem; font-weight:700;
+    color:var(--amber); opacity:0.4; flex-shrink:0; line-height:1; margin-top:0.1rem;
+  }
+  .flow-text h4 { font-size:0.95rem; font-weight:700; margin-bottom:0.3rem; }
+  .flow-text p  { font-size:0.82rem; color:var(--muted); line-height:1.6; font-weight:300; margin:0; }
+
+  /* RESPONSIVE */
+  @media (max-width:900px) {
+    .sidebar { transform:translateX(-100%); transition:transform 0.3s; }
+    .sidebar.open { transform:translateX(0); }
+    .docs-main { margin-left:0; padding:2rem 1.5rem; max-width:100%; }
+    .mobile-menu-btn { display:block; }
+    .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:99; }
+    .sidebar-overlay.active { display:block; }
+  }
+  @media (max-width:480px) {
+    .docs-main { padding:1.5rem 1rem; }
+    .ep-ref-header { flex-direction:column; align-items:flex-start; }
+    .ep-cost-badge { margin-left:0; }
+    .topnav-links { display:none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <a href="/" class="logo"><div class="logo-dot"></div>SATS_API</a>
+  <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Menu">
+    <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <ul class="topnav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/#demo">Demo</a></li>
+    <li><a href="/#pricing">Pricing</a></li>
+    <li><a href="https://github.com/Aperezvigoa/satsapi" target="_blank">GitHub</a></li>
+    <li><a href="/#demo" class="topnav-cta">Try Now</a></li>
+  </ul>
+</nav>
+
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<div class="docs-layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Getting Started</div>
+      <a href="#intro"      class="sidebar-link active">Introduction</a>
+      <a href="#quickstart" class="sidebar-link">Quick Start</a>
+      <a href="#baseurl"    class="sidebar-link">Base URL</a>
+      <a href="#errors"     class="sidebar-link">Errors</a>
+      <a href="#ratelimits" class="sidebar-link">Rate Limits</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Authentication</div>
+      <a href="#l402-overview" class="sidebar-link">L402 Protocol</a>
+      <a href="#l402-flow"     class="sidebar-link">Payment Flow</a>
+      <a href="#l402-tools"    class="sidebar-link">Compatible Tools</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Endpoints</div>
+      <a href="#ep-price"       class="sidebar-link"><span class="method-badge">GET</span>/v1/price</a>
+      <a href="#ep-mempool"     class="sidebar-link"><span class="method-badge">GET</span>/v1/mempool</a>
+      <a href="#ep-tx"          class="sidebar-link"><span class="method-badge">GET</span>/v1/tx/:txid</a>
+      <a href="#ep-onchain"     class="sidebar-link"><span class="method-badge">GET</span>/v1/onchain</a>
+      <a href="#ep-derivatives" class="sidebar-link"><span class="method-badge">GET</span>/v1/derivatives</a>
+      <a href="#ep-news"        class="sidebar-link"><span class="method-badge">GET</span>/v1/news</a>
+      <a href="#ep-signal"      class="sidebar-link"><span class="method-badge">GET</span>/v1/signal</a>
+      <a href="#ep-summary"     class="sidebar-link"><span class="method-badge">GET</span>/v1/summary ★</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Code Examples</div>
+      <a href="#code-js"     class="sidebar-link">JavaScript</a>
+      <a href="#code-python" class="sidebar-link">Python</a>
+      <a href="#code-curl"   class="sidebar-link">cURL</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">AI Agents</div>
+      <a href="#agents-intro"    class="sidebar-link">Overview</a>
+      <a href="#agents-botready" class="sidebar-link">bot_ready Object</a>
+      <a href="#agents-flow"     class="sidebar-link">Autonomous Flow</a>
+      <a href="#agents-examples" class="sidebar-link">Integration Examples</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="docs-main">
+
+    <!-- INTRO -->
+    <div class="doc-section" id="intro">
+      <h1>SatsAPI <span>Documentation</span></h1>
+      <p>SatsAPI is a Bitcoin market intelligence API that uses the <strong>Lightning Network L402 protocol</strong> for pay-per-call pricing. No registration, no API keys, no subscriptions. You pay in satoshis, you get data.</p>
+      <p>The API provides 8 endpoints covering real-time price data, mempool analysis, on-chain metrics, derivatives, AI-generated signals and full market summaries. Every response is structured for both human developers and autonomous AI agents.</p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">Current status</div>
+        SatsAPI is in open beta. L402 payment enforcement is not yet active — all endpoints are currently free to call. Payment will be enforced once the Lightning backend is deployed.
+      </div>
+
+      <h2 id="baseurl">Base URL</h2>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">endpoint</span></div>
+        <pre>https://satsapi.dev</pre>
+      </div>
+      <p>All endpoints are served over HTTPS. HTTP requests are redirected to HTTPS.</p>
+
+      <h2 id="errors">Error Codes</h2>
+      <table class="ref-table">
+        <thead><tr><th>Status</th><th>Code</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr class="error-row"><td><span style="color:var(--amber)">402</span></td><td class="param-name">payment_required</td><td class="param-desc">Lightning invoice in <code style="color:var(--amber)">WWW-Authenticate</code> header. Pay and retry.</td></tr>
+          <tr class="error-row"><td><span style="color:var(--red)">429</span></td><td class="param-name">rate_limit_exceeded</td><td class="param-desc">Too many requests. Check <code style="color:var(--amber)">Retry-After</code> header.</td></tr>
+          <tr class="error-row"><td><span style="color:var(--red)">500</span></td><td class="param-name">upstream_error</td><td class="param-desc">External data source temporarily unavailable.</td></tr>
+          <tr class="error-row"><td><span style="color:var(--red)">503</span></td><td class="param-name">service_unavailable</td><td class="param-desc">API temporarily offline.</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="ratelimits">Rate Limits</h2>
+      <p>Rate limits are enforced per IP address. Limits vary by endpoint complexity:</p>
+      <table class="rate-table">
+        <thead><tr><th>Tier</th><th>Endpoints</th><th>Limit</th></tr></thead>
+        <tbody>
+          <tr><td class="rate-label">Standard</td><td>/v1/price · /v1/mempool · /v1/tx · /v1/onchain · /v1/derivatives</td><td>60 req/min</td></tr>
+          <tr><td class="rate-label">AI</td><td>/v1/news · /v1/signal</td><td>10 req/min</td></tr>
+          <tr><td class="rate-label">Heavy</td><td>/v1/summary</td><td>5 req/min</td></tr>
+        </tbody>
+      </table>
+      <p>When a rate limit is hit, the response includes <code style="color:var(--amber)">X-RateLimit-Limit</code>, <code style="color:var(--amber)">X-RateLimit-Remaining</code> and <code style="color:var(--amber)">Retry-After</code> headers.</p>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- L402 AUTH -->
+    <div class="doc-section" id="l402-overview">
+      <h1>Authentication <span>L402</span></h1>
+      <p>SatsAPI uses the <strong>L402 protocol</strong> (HTTP 402 Payment Required) for authentication. Instead of API keys, you pay a tiny Lightning Network invoice per request. The entire payment cycle completes in under one second.</p>
+      <p>L402 is an open standard originally proposed by Lightning Labs. It enables <strong>machine-to-machine micropayments</strong> — AI agents can pay for API calls autonomously without human intervention.</p>
+
+      <div class="callout callout-success">
+        <div class="callout-title">No account required</div>
+        There is no registration, no email, no credit card, no API key. The Lightning invoice is the credential.
+      </div>
+
+      <h2 id="l402-flow">Payment Flow</h2>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="flow-num">01</div>
+          <div class="flow-text">
+            <h4>Make the initial request</h4>
+            <p>Call any endpoint as a standard GET request. No headers required.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">02</div>
+          <div class="flow-text">
+            <h4>Receive HTTP 402 + invoice</h4>
+            <p>The server responds with status 402. The <code style="color:var(--amber)">WWW-Authenticate</code> header contains a LSAT token and a Lightning invoice (BOLT11 format).</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">03</div>
+          <div class="flow-text">
+            <h4>Pay the Lightning invoice</h4>
+            <p>Use any Lightning wallet or client library to pay the invoice. Payment settles in milliseconds. You receive a payment preimage.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">04</div>
+          <div class="flow-text">
+            <h4>Repeat request with token</h4>
+            <p>Send the same request with the <code style="color:var(--amber)">Authorization: LSAT &lt;token&gt;:&lt;preimage&gt;</code> header. The server verifies and returns the data.</p>
+          </div>
+        </div>
+      </div>
+
+      <h2 id="l402-tools">Compatible Tools</h2>
+      <table class="ref-table">
+        <thead><tr><th>Tool</th><th>Type</th><th>Use case</th></tr></thead>
+        <tbody>
+          <tr><td class="param-name">lnget</td><td class="param-type">CLI</td><td class="param-desc">Command-line L402 client. Drop-in replacement for curl with automatic payment handling.</td></tr>
+          <tr><td class="param-name">Aperture</td><td class="param-type">Proxy</td><td class="param-desc">Lightning Labs reverse proxy. Handles L402 for any backend automatically.</td></tr>
+          <tr><td class="param-name">WebLN</td><td class="param-type">Browser</td><td class="param-desc">Browser-based Lightning wallet API. Used for frontend integrations.</td></tr>
+          <tr><td class="param-name">LNC</td><td class="param-type">Library</td><td class="param-desc">Lightning Node Connect. Node.js / browser library for programmatic payments.</td></tr>
+          <tr><td class="param-name">LNbits</td><td class="param-type">Wallet</td><td class="param-desc">Self-hosted Lightning wallet with API. Suitable for server-side integrations.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- ENDPOINTS -->
+    <div class="doc-section" id="ep-price">
+      <h1>Endpoint <span>Reference</span></h1>
+
+      <!-- /v1/price -->
+      <h2 id="ep-price">GET /v1/price</h2>
+      <div class="ep-ref">
+        <div class="ep-ref-header">
+          <span class="ep-badge">GET</span>
+          <span class="ep-ref-path">https://satsapi.dev/v1/price</span>
+          <span class="ep-cost-badge">3 sats · 60 req/min</span>
+        </div>
+        <div class="ep-ref-body">
+          <p class="ep-desc-text">Returns the current BTC/USD price along with key technical indicators: RSI-14, 50-day and 200-day moving averages, MACD bias, 24h change, high/low and trend classification. Includes historical OHLC data when called with <code style="color:var(--amber)">?full=true</code>.</p>
+
+          <h3>Query Parameters</h3>
+          <table class="ref-table">
+            <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="param-name">full</td><td class="param-type">boolean</td><td>false</td><td class="param-desc">Include internal OHLC history arrays used by /v1/signal.</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Response Fields</h3>
+          <table class="ref-table">
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="param-name">symbol</td><td class="param-type">string</td><td class="param-desc">Always "BTC/USD"</td></tr>
+              <tr><td class="param-name">price</td><td class="param-type">number</td><td class="param-desc">Current price in USD</td></tr>
+              <tr><td class="param-name">change_24h</td><td class="param-type">string</td><td class="param-desc">24h price change as percentage string (e.g. "-1.24%")</td></tr>
+              <tr><td class="param-name">high_24h</td><td class="param-type">number</td><td class="param-desc">24h high price in USD</td></tr>
+              <tr><td class="param-name">low_24h</td><td class="param-type">number</td><td class="param-desc">24h low price in USD</td></tr>
+              <tr><td class="param-name">volume_24h</td><td class="param-type">string</td><td class="param-desc">24h trading volume (formatted)</td></tr>
+              <tr><td class="param-name">ma_50</td><td class="param-type">number</td><td class="param-desc">50-day simple moving average</td></tr>
+              <tr><td class="param-name">ma_200</td><td class="param-type">number</td><td class="param-desc">200-day simple moving average</td></tr>
+              <tr><td class="param-name">rsi_14</td><td class="param-type">number</td><td class="param-desc">14-period RSI (0–100)</td></tr>
+              <tr><td class="param-name">trend</td><td class="param-type">string</td><td class="param-desc">"BULLISH" | "BEARISH" | "NEUTRAL"</td></tr>
+              <tr><td class="param-name">macd_bias</td><td class="param-type">string</td><td class="param-desc">"BULLISH" | "BEARISH" | "NEUTRAL"</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Example Response</h3>
+          <div class="res-example">
+            <div class="res-header"><span class="res-status status-200">200 OK</span><span class="code-lang" style="margin-left:auto">application/json</span></div>
+            <pre><span class="c-key">"endpoint"</span>: <span class="c-str">"/v1/price"</span>,
+<span class="c-key">"cost_sats"</span>: <span class="c-num">3</span>,
+<span class="c-key">"data"</span>: {
+  <span class="c-key">"symbol"</span>: <span class="c-str">"BTC/USD"</span>,
+  <span class="c-key">"price"</span>: <span class="c-num">84231.50</span>,
+  <span class="c-key">"change_24h"</span>: <span class="c-str">"-1.24%"</span>,
+  <span class="c-key">"high_24h"</span>: <span class="c-num">85900.00</span>,
+  <span class="c-key">"low_24h"</span>: <span class="c-num">83100.00</span>,
+  <span class="c-key">"volume_24h"</span>: <span class="c-str">"$42.1B"</span>,
+  <span class="c-key">"ma_50"</span>: <span class="c-num">87420.15</span>,
+  <span class="c-key">"ma_200"</span>: <span class="c-num">71380.44</span>,
+  <span class="c-key">"rsi_14"</span>: <span class="c-num">44.2</span>,
+  <span class="c-key">"trend"</span>: <span class="c-str">"BEARISH"</span>,
+  <span class="c-key">"macd_bias"</span>: <span class="c-str">"BEARISH"</span>
+},
+<span class="c-key">"timestamp"</span>: <span class="c-str">"2026-03-07T20:00:00.000Z"</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- /v1/mempool -->
+      <h2 id="ep-mempool">GET /v1/mempool</h2>
+      <div class="ep-ref">
+        <div class="ep-ref-header">
+          <span class="ep-badge">GET</span>
+          <span class="ep-ref-path">https://satsapi.dev/v1/mempool</span>
+          <span class="ep-cost-badge">2 sats · 60 req/min</span>
+        </div>
+        <div class="ep-ref-body">
+          <p class="ep-desc-text">Returns current mempool state including pending transaction count, total size, congestion level, recommended fees for different confirmation targets, and data about the most recently mined block.</p>
+          <h3>Response Fields</h3>
+          <table class="ref-table">
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="param-name">pending_txs</td><td class="param-type">number</td><td class="param-desc">Number of unconfirmed transactions</td></tr>
+              <tr><td class="param-name">pending_size</td><td class="param-type">string</td><td class="param-desc">Total mempool size (formatted)</td></tr>
+              <tr><td class="param-name">congestion</td><td class="param-type">string</td><td class="param-desc">"LOW" | "MEDIUM" | "HIGH"</td></tr>
+              <tr><td class="param-name">fees.fast_10min</td><td class="param-type">string</td><td class="param-desc">Recommended fee for ~10 min confirmation</td></tr>
+              <tr><td class="param-name">fees.medium_30min</td><td class="param-type">string</td><td class="param-desc">Recommended fee for ~30 min confirmation</td></tr>
+              <tr><td class="param-name">fees.slow_1h</td><td class="param-type">string</td><td class="param-desc">Recommended fee for ~1 hour confirmation</td></tr>
+              <tr><td class="param-name">last_block.height</td><td class="param-type">number</td><td class="param-desc">Height of the most recently mined block</td></tr>
+              <tr><td class="param-name">last_block.tx_count</td><td class="param-type">number</td><td class="param-desc">Transactions in the last block</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- /v1/tx -->
+      <h2 id="ep-tx">GET /v1/tx/:txid</h2>
+      <div class="ep-ref">
+        <div class="ep-ref-header">
+          <span class="ep-badge">GET</span>
+          <span class="ep-ref-path">https://satsapi.dev/v1/tx/:txid</span>
+          <span class="ep-cost-badge">2 sats · 60 req/min</span>
+        </div>
+        <div class="ep-ref-body">
+          <p class="ep-desc-text">Looks up a Bitcoin transaction by TXID. Returns confirmation status, block position, fee details, input/output counts and transferred value.</p>
+          <h3>Path Parameters</h3>
+          <table class="ref-table">
+            <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="param-name">txid</td><td class="param-type">string</td><td class="param-desc">64-character hex transaction ID</td></tr>
+            </tbody>
+          </table>
+          <h3>Response Fields</h3>
+          <table class="ref-table">
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="param-name">status</td><td class="param-type">string</td><td class="param-desc">"CONFIRMED" | "PENDING"</td></tr>
+              <tr><td class="param-name">confirmations</td><td class="param-type">number</td><td class="param-desc">Number of confirmations. 0 if unconfirmed.</td></tr>
+              <tr><td class="param-name">block_height</td><td class="param-type">number</td><td class="param-desc">Block height where tx was included. null if pending.</td></tr>
+              <tr><td class="param-name">fee_sats</td><td class="param-type">number</td><td class="param-desc">Total fee in satoshis</td></tr>
+              <tr><td class="param-name">fee_rate</td><td class="param-type">string</td><td class="param-desc">Fee rate in sat/vByte</td></tr>
+              <tr><td class="param-name">inputs</td><td class="param-type">number</td><td class="param-desc">Number of inputs</td></tr>
+              <tr><td class="param-name">outputs</td><td class="param-type">number</td><td class="param-desc">Number of outputs</td></tr>
+              <tr><td class="param-name">value_btc</td><td class="param-type">string</td><td class="param-desc">Total output value in BTC</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- /v1/onchain -->
+      <h2 id="ep-onchain">GET /v1/onchain</h2>
+      <div class="ep-ref">
+        <div class="ep-ref-header">
+          <span class="ep-badge">GET</span>
+          <span class="ep-ref-path">https://satsapi.dev/v1/onchain</span>
+          <span class="ep-cost-badge">15 sats · 60 req/min</span>
+        </div>
+        <div class="ep-ref-body">
+          <p class="ep-desc-text">Aggregated on-chain intelligence including the Fear & Greed index (with 7-day history), BTC market dominance, circulating supply, network hash rate and an AI-derived market phase classification.</p>
+          <h3>Response Fields</h3>
+          <table class="ref-table">
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="param-name">fear_and_greed.value</td><td class="param-type">number</td><td class="param-desc">Index value 0–100</td></tr>
+              <tr><td class="param-name">fear_and_greed.label</td><td class="param-type">string</td><td class="param-desc">"Extreme Fear" | "Fear" | "Neutral" | "Greed" | "Extreme Greed"</td></tr>
+              <tr><td class="param-name">fear_and_greed.trend</td><td class="param-type">string</td><td class="param-desc">"IMPROVING" | "DETERIORATING" | "STABLE"</td></tr>
+              <tr><td class="param-name">dominance.btc_dominance</td><td class="param-type">string</td><td class="param-desc">BTC market cap dominance percentage</td></tr>
+              <tr><td class="param-name">supply.circulating_btc</td><td class="param-type">number</td><td class="param-desc">Current circulating supply</td></tr>
+              <tr><td class="param-name">network.hashrate_eh</td><td class="param-type">number</td><td class="param-desc">Hash rate in exahashes/second</td></tr>
+              <tr><td class="param-name">market_phase.phase</td><td class="param-type">string</td><td class="param-desc">Detected market phase classification</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- /v1/derivatives -->
+      <h2 id="ep-derivatives">GET /v1/derivatives</h2>
+      <div class="ep-ref">
+        <div class="ep-ref-header">
+          <span class="ep-badge">GET</span>
+          <span class="ep-ref-path">https://satsapi.dev/v1/derivatives</span>
+          <span class="ep-cost-badge">15 sats · 60 req/min</span>
+        </div>
+        <div class="ep-ref-body">
+          <p class="ep-desc-text">Perpetual futures market data including funding rate, open interest trend, long/short ratio and an overall leverage risk assessment.</p>
+          <div class="callout callout-warning">
+            <div class="callout-title">Estimated data</div>
+            Exchange APIs block Railway's IP range. Derivatives data is estimated from price momentum and CryptoCompare data. Response includes <code style="color:var(--amber)">estimated: true</code> and a <code style="color:var(--amber)">data_note</code> field.
+          </div>
+          <h3>Response Fields</h3>
+          <table class="ref-table">
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="param-name">funding_rate.current_pct</td><td class="param-type">number</td><td class="param-desc">8-hour funding rate as percentage</td></tr>
+              <tr><td class="param-name">funding_rate.bias</td><td class="param-type">string</td><td class="param-desc">"BULLISH" | "NEUTRAL" | "BEARISH"</td></tr>
+              <tr><td class="param-name">open_interest.trend</td><td class="param-type">string</td><td class="param-desc">"INCREASING" | "DECREASING" | "STABLE"</td></tr>
+              <tr><td class="param-name">long_short.long_pct</td><td class="param-type">number</td><td class="param-desc">Percentage of accounts with long positions</td></tr>
+              <tr><td class="param-name">long_short.sentiment</td><td class="param-type">string</td><td class="param-desc">"MAJORITY_LONG" | "MAJORITY_SHORT" | "BALANCED"</td></tr>
+              <tr><td class="param-name">leverage_risk</td><td class="param-type">string</td><td class="param-desc">"LOW" | "MEDIUM" | "HIGH" | "EXTREME"</td></tr>
+              <tr><td class="param-name">estimated</td><td class="param-type">boolean</td><td class="param-desc">true — data is estimated from momentum</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- /v1/news -->
+      <h2 id="ep-news">GET /v1/news</h2>
+      <div class="ep-ref">
+        <div class="ep-ref-header">
+          <span class="ep-badge">GET</span>
+          <span class="ep-ref-path">https://satsapi.dev/v1/news</span>
+          <span class="ep-cost-badge">50 sats · 10 req/min · cached 6h</span>
+        </div>
+        <div class="ep-ref-body">
+          <p class="ep-desc-text">AI-generated daily news summary powered by Claude. Fetches the latest crypto news headlines, analyzes them for market sentiment, and returns a structured summary with sentiment score, top 3 key events, and market impact narrative. Response is cached for 6 hours to reduce Claude API costs.</p>
+          <h3>Response Fields</h3>
+          <table class="ref-table">
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="param-name">sentiment</td><td class="param-type">string</td><td class="param-desc">"BULLISH" | "NEUTRAL" | "BEARISH"</td></tr>
+              <tr><td class="param-name">score</td><td class="param-type">number</td><td class="param-desc">Sentiment score 0.0–1.0</td></tr>
+              <tr><td class="param-name">summary</td><td class="param-type">string</td><td class="param-desc">AI-generated 2-3 sentence market narrative</td></tr>
+              <tr><td class="param-name">top_events</td><td class="param-type">string[]</td><td class="param-desc">Array of 3 key news events</td></tr>
+              <tr><td class="param-name">cached</td><td class="param-type">boolean</td><td class="param-desc">true if response served from cache</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- /v1/signal -->
+      <h2 id="ep-signal">GET /v1/signal</h2>
+      <div class="ep-ref">
+        <div class="ep-ref-header">
+          <span class="ep-badge">GET</span>
+          <span class="ep-ref-path">https://satsapi.dev/v1/signal</span>
+          <span class="ep-cost-badge">150 sats · 10 req/min</span>
+        </div>
+        <div class="ep-ref-body">
+          <p class="ep-desc-text">The most sophisticated single-endpoint signal. Aggregates data from all other endpoints and sends it to Claude for multi-factor analysis. Returns a BUY / SELL / HOLD signal with confluence score, detailed reasoning, Pi Cycle Top ratio, multi-timeframe RSI (1D/4H/1H) and an ATR-based trade setup when applicable.</p>
+          <h3>Response Fields</h3>
+          <table class="ref-table">
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="param-name">signal</td><td class="param-type">string</td><td class="param-desc">"BUY" | "SELL" | "HOLD"</td></tr>
+              <tr><td class="param-name">confluence</td><td class="param-type">number</td><td class="param-desc">Percentage of factors aligned (0–100)</td></tr>
+              <tr><td class="param-name">confidence</td><td class="param-type">number</td><td class="param-desc">Model confidence 0.0–1.0</td></tr>
+              <tr><td class="param-name">risk_level</td><td class="param-type">string</td><td class="param-desc">"LOW" | "MEDIUM" | "HIGH" | "EXTREME"</td></tr>
+              <tr><td class="param-name">reasoning</td><td class="param-type">string</td><td class="param-desc">Analyst-grade explanation of the signal</td></tr>
+              <tr><td class="param-name">historical_context</td><td class="param-type">string</td><td class="param-desc">Historical precedent for current conditions</td></tr>
+              <tr><td class="param-name">trade_setup</td><td class="param-type">object|null</td><td class="param-desc">Entry, stop-loss and target levels. null if no clear setup.</td></tr>
+              <tr><td class="param-name">technicals.rsi_1d</td><td class="param-type">number</td><td class="param-desc">Daily RSI</td></tr>
+              <tr><td class="param-name">technicals.rsi_4h</td><td class="param-type">number</td><td class="param-desc">4-hour RSI</td></tr>
+              <tr><td class="param-name">technicals.pi_cycle_ratio_pct</td><td class="param-type">number</td><td class="param-desc">Distance of 111DMA from 2x350DMA as %</td></tr>
+              <tr><td class="param-name">technicals.atr_14d</td><td class="param-type">number</td><td class="param-desc">14-day Average True Range in USD</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- /v1/summary -->
+      <h2 id="ep-summary">GET /v1/summary ★</h2>
+      <div class="ep-ref" style="border-color:var(--amber)">
+        <div class="ep-ref-header" style="background:var(--amber-glow)">
+          <span class="ep-badge" style="background:var(--amber);color:var(--bg)">GET ★</span>
+          <span class="ep-ref-path">https://satsapi.dev/v1/summary</span>
+          <span class="ep-cost-badge">200 sats · 5 req/min · cached 10min</span>
+        </div>
+        <div class="ep-ref-body">
+          <p class="ep-desc-text">The flagship endpoint. Aggregates all 7 other endpoints into a single comprehensive market intelligence report. Includes a 0–100 market score, AI executive summary, full risk matrix, key support/resistance levels and a flat <code style="color:var(--amber)">bot_ready</code> object designed for autonomous agent consumption.</p>
+          <h3>Response Fields</h3>
+          <table class="ref-table">
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="param-name">market_score</td><td class="param-type">number</td><td class="param-desc">Overall market score 0–100. &lt;40 = bearish, 40–60 = neutral, &gt;60 = bullish.</td></tr>
+              <tr><td class="param-name">market_score_label</td><td class="param-type">string</td><td class="param-desc">"BEARISH" | "NEUTRAL" | "BULLISH"</td></tr>
+              <tr><td class="param-name">executive_summary</td><td class="param-type">string</td><td class="param-desc">4-6 sentence analyst-grade narrative of current conditions.</td></tr>
+              <tr><td class="param-name">bot_ready</td><td class="param-type">object</td><td class="param-desc">Flat, typed object with all critical fields. See below.</td></tr>
+              <tr><td class="param-name">risk_matrix</td><td class="param-type">object[]</td><td class="param-desc">Array of risk/opportunity items with level and note.</td></tr>
+            </tbody>
+          </table>
+
+          <h3>bot_ready Object</h3>
+          <div class="code-wrap">
+            <div class="code-header"><span class="code-lang">typescript</span></div>
+            <pre><span class="c-key">signal</span>:            <span class="c-str">"BUY" | "SELL" | "HOLD"</span>
+<span class="c-key">confluence</span>:        <span class="c-num">number</span>   <span class="c-comment">// 0–100 factor alignment</span>
+<span class="c-key">market_score</span>:      <span class="c-num">number</span>   <span class="c-comment">// 0–100 overall score</span>
+<span class="c-key">price_usd</span>:         <span class="c-num">number</span>   <span class="c-comment">// current BTC price</span>
+<span class="c-key">rsi_1d</span>:            <span class="c-num">number</span>   <span class="c-comment">// daily RSI</span>
+<span class="c-key">rsi_4h</span>:            <span class="c-num">number</span>   <span class="c-comment">// 4-hour RSI</span>
+<span class="c-key">fear_greed</span>:        <span class="c-num">number</span>   <span class="c-comment">// 0–100 index value</span>
+<span class="c-key">fear_greed_label</span>:  <span class="c-str">string</span>   <span class="c-comment">// human-readable classification</span>
+<span class="c-key">funding_bias</span>:      <span class="c-str">"BULLISH" | "NEUTRAL" | "BEARISH"</span>
+<span class="c-key">long_pct</span>:          <span class="c-num">number</span>   <span class="c-comment">// % accounts long</span>
+<span class="c-key">leverage_risk</span>:     <span class="c-str">"LOW" | "MEDIUM" | "HIGH" | "EXTREME"</span>
+<span class="c-key">support</span>:           <span class="c-num">number</span>   <span class="c-comment">// key support level USD</span>
+<span class="c-key">resistance</span>:        <span class="c-num">number</span>   <span class="c-comment">// key resistance level USD</span>
+<span class="c-key">highest_risk</span>:      <span class="c-str">string</span>   <span class="c-comment">// top risk/opportunity label</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- CODE EXAMPLES -->
+    <div class="doc-section" id="code-js">
+      <h1>Code <span>Examples</span></h1>
+
+      <h2 id="code-js">JavaScript / Node.js</h2>
+
+      <h3>Basic price fetch</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">javascript</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="c-comment">// Simple fetch — currently free (L402 not enforced yet)</span>
+<span class="c-kw">const</span> res  = <span class="c-kw">await</span> fetch(<span class="c-str">'https://satsapi.dev/v1/price'</span>);
+<span class="c-kw">const</span> json = <span class="c-kw">await</span> res.json();
+console.log(json.data.price);   <span class="c-comment">// 84231.50</span>
+console.log(json.data.signal);  <span class="c-comment">// "BEARISH"</span></pre>
+      </div>
+
+      <h3>Full L402 payment flow</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">javascript</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="c-kw">async function</span> <span class="c-fn">callSatsAPI</span>(path) {
+  <span class="c-comment">// 1. Initial request</span>
+  <span class="c-kw">let</span> res = <span class="c-kw">await</span> fetch(<span class="c-str">`https://satsapi.dev${path}`</span>);
+
+  <span class="c-comment">// 2. Handle 402 — pay Lightning invoice</span>
+  <span class="c-kw">if</span> (res.status === 402) {
+    <span class="c-kw">const</span> authHeader = res.headers.get(<span class="c-str">'WWW-Authenticate'</span>);
+    <span class="c-comment">// authHeader format: "LSAT token=&lt;token&gt;, invoice=&lt;bolt11&gt;"</span>
+    <span class="c-kw">const</span> invoice  = authHeader.match(/invoice="([^"]+)"/)[1];
+    <span class="c-kw">const</span> token    = authHeader.match(/token="([^"]+)"/)[1];
+
+    <span class="c-comment">// Pay with your Lightning wallet</span>
+    <span class="c-kw">const</span> preimage = <span class="c-kw">await</span> wallet.pay(invoice);
+
+    <span class="c-comment">// 3. Repeat with LSAT token</span>
+    res = <span class="c-kw">await</span> fetch(<span class="c-str">`https://satsapi.dev${path}`</span>, {
+      headers: { <span class="c-str">'Authorization'</span>: <span class="c-str">`LSAT ${token}:${preimage}`</span> }
+    });
+  }
+
+  <span class="c-kw">return</span> res.json();
+}
+
+<span class="c-comment">// Usage</span>
+<span class="c-kw">const</span> summary = <span class="c-kw">await</span> callSatsAPI(<span class="c-str">'/v1/summary'</span>);
+console.log(summary.data.bot_ready.signal); <span class="c-comment">// "HOLD"</span></pre>
+      </div>
+
+      <h2 id="code-python">Python</h2>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="c-kw">import</span> requests
+
+<span class="c-kw">def</span> <span class="c-fn">call_sats_api</span>(path: str, wallet=None) -> dict:
+    <span class="c-str">"""Call SatsAPI with optional L402 payment handling."""</span>
+    url = <span class="c-str">f"https://satsapi.dev{path}"</span>
+
+    <span class="c-comment"># 1. Initial request</span>
+    r = requests.get(url)
+
+    <span class="c-comment"># 2. Handle 402 payment</span>
+    <span class="c-kw">if</span> r.status_code == 402 <span class="c-kw">and</span> wallet:
+        auth = r.headers.get(<span class="c-str">"WWW-Authenticate"</span>, <span class="c-str">""</span>)
+        invoice = re.search(<span class="c-str">r'invoice="([^"]+)"'</span>, auth).group(1)
+        token   = re.search(<span class="c-str">r'token="([^"]+)"'</span>, auth).group(1)
+
+        <span class="c-comment"># Pay invoice</span>
+        preimage = wallet.pay(invoice)
+
+        <span class="c-comment"># 3. Retry with token</span>
+        r = requests.get(url, headers={
+            <span class="c-str">"Authorization"</span>: <span class="c-str">f"LSAT {token}:{preimage}"</span>
+        })
+
+    r.raise_for_status()
+    <span class="c-kw">return</span> r.json()
+
+<span class="c-comment"># Usage</span>
+data = call_sats_api(<span class="c-str">"/v1/signal"</span>)
+print(data[<span class="c-str">"data"</span>][<span class="c-str">"signal"</span>])      <span class="c-comment"># "HOLD"</span>
+print(data[<span class="c-str">"data"</span>][<span class="c-str">"confluence"</span>])  <span class="c-comment"># 52</span></pre>
+      </div>
+
+      <h2 id="code-curl">cURL</h2>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="c-comment"># Price check</span>
+curl https://satsapi.dev/v1/price | jq .
+
+<span class="c-comment"># Full market summary</span>
+curl https://satsapi.dev/v1/summary | jq .data.bot_ready
+
+<span class="c-comment"># Transaction lookup</span>
+curl https://satsapi.dev/v1/tx/4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b
+
+<span class="c-comment"># With L402 payment (using lnget CLI)</span>
+lnget https://satsapi.dev/v1/signal
+
+<span class="c-comment"># Manual LSAT after paying invoice</span>
+curl https://satsapi.dev/v1/price \
+  -H "Authorization: LSAT &lt;token&gt;:&lt;preimage&gt;"</pre>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- AI AGENTS -->
+    <div class="doc-section" id="agents-intro">
+      <h1>AI Agent <span>Integration</span></h1>
+      <p>SatsAPI is designed from the ground up for autonomous AI agents. The L402 protocol lets agents pay for data without human intervention, and the <code style="color:var(--amber)">bot_ready</code> object eliminates all parsing complexity.</p>
+
+      <h2 id="agents-botready">The bot_ready Object</h2>
+      <p>Every call to <code style="color:var(--amber)">/v1/summary</code> (and <code style="color:var(--amber)">/v1/signal</code>) returns a flat <code style="color:var(--amber)">bot_ready</code> object at the top level of the response. All fields are primitives — no nested objects, no arrays, no post-processing.</p>
+
+      <div class="callout callout-success">
+        <div class="callout-title">Zero parsing required</div>
+        <code style="color:var(--amber)">if (data.signal === 'BUY' && data.confluence > 65 && data.leverage_risk !== 'EXTREME')</code> — that's the entire decision logic.
+      </div>
+
+      <h2 id="agents-flow">Autonomous Payment Flow</h2>
+      <p>Using <strong>lnget</strong>, the payment is handled transparently:</p>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="c-comment"># lnget handles 402 → pay → retry automatically</span>
+lnget https://satsapi.dev/v1/summary | jq .data.bot_ready</pre>
+      </div>
+
+      <h2 id="agents-examples">Integration Examples</h2>
+
+      <h3>LangChain Tool</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">javascript</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="c-kw">import</span> { Tool } <span class="c-kw">from</span> <span class="c-str">"langchain/tools"</span>;
+
+<span class="c-kw">class</span> <span class="c-fn">BitcoinIntelligenceTool</span> extends Tool {
+  name = <span class="c-str">"bitcoin_market_intelligence"</span>;
+  description = <span class="c-str">"Returns BTC market signal (BUY/SELL/HOLD), "</span> +
+    <span class="c-str">"price levels, risk assessment and confluence score. "</span> +
+    <span class="c-str">"Use before making any Bitcoin-related decision."</span>;
+
+  <span class="c-kw">async</span> <span class="c-fn">_call</span>() {
+    <span class="c-kw">const</span> res  = <span class="c-kw">await</span> fetch(<span class="c-str">"https://satsapi.dev/v1/summary"</span>);
+    <span class="c-kw">const</span> json = <span class="c-kw">await</span> res.json();
+    <span class="c-kw">return</span> JSON.stringify(json.data.bot_ready);
+  }
+}
+
+<span class="c-comment">// Agent will receive:</span>
+<span class="c-comment">// { signal:"HOLD", confluence:52, price_usd:84231, fear_greed:28,</span>
+<span class="c-comment">//   support:79400, resistance:91200, leverage_risk:"LOW" }</span></pre>
+      </div>
+
+      <h3>AutoGPT / OpenAgents Function</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre>tools = [{
+    <span class="c-str">"type"</span>: <span class="c-str">"function"</span>,
+    <span class="c-str">"function"</span>: {
+        <span class="c-str">"name"</span>: <span class="c-str">"get_bitcoin_signal"</span>,
+        <span class="c-str">"description"</span>: <span class="c-str">"Get current BTC market signal and risk assessment"</span>,
+        <span class="c-str">"parameters"</span>: { <span class="c-str">"type"</span>: <span class="c-str">"object"</span>, <span class="c-str">"properties"</span>: {} }
+    }
+}]
+
+<span class="c-kw">def</span> <span class="c-fn">get_bitcoin_signal</span>():
+    r = requests.get(<span class="c-str">"https://satsapi.dev/v1/summary"</span>)
+    <span class="c-kw">return</span> r.json()[<span class="c-str">"data"</span>][<span class="c-str">"bot_ready"</span>]</pre>
+      </div>
+
+      <h3>Cron-based trading bot</h3>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">javascript</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="c-comment">// Run every 4 hours — costs 200 sats/run (~1200 sats/day)</span>
+<span class="c-kw">async function</span> <span class="c-fn">tradingCycle</span>() {
+  <span class="c-kw">const</span> { data } = <span class="c-kw">await</span> (await fetch(<span class="c-str">"https://satsapi.dev/v1/summary"</span>)).json();
+  <span class="c-kw">const</span> b = data.bot_ready;
+
+  <span class="c-comment">// Only act on high-confluence signals</span>
+  <span class="c-kw">if</span> (b.signal === <span class="c-str">"BUY"</span> && b.confluence >= 65 && b.leverage_risk !== <span class="c-str">"EXTREME"</span>) {
+    <span class="c-kw">await</span> exchange.createOrder(<span class="c-str">"BTC/USDT"</span>, <span class="c-str">"buy"</span>, b.price_usd * 0.995);
+    log(<span class="c-str">`BUY at ${b.price_usd} — confluence ${b.confluence}% — stop ${b.support}`</span>);
+  }
+
+  <span class="c-kw">if</span> (b.signal === <span class="c-str">"SELL"</span> && b.confluence >= 70) {
+    <span class="c-kw">await</span> exchange.closePositions();
+    log(<span class="c-str">`SELL at ${b.price_usd} — score ${b.market_score}/100`</span>);
+  }
+}
+
+cron.schedule(<span class="c-str">"0 */4 * * *"</span>, tradingCycle);</pre>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">Risk disclaimer</div>
+        SatsAPI signals are informational only and do not constitute financial advice. Past signal performance does not guarantee future results. Always implement your own risk management.
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('active');
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-wrap').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'Copied';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+
+// Sidebar active link on scroll
+const sections = document.querySelectorAll('.doc-section, [id]');
+const links    = document.querySelectorAll('.sidebar-link');
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const target = document.querySelector(`.sidebar-link[href="#${entry.target.id}"]`);
+      if (target) target.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+document.querySelectorAll('[id]').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
