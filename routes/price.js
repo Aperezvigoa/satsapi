@@ -4,10 +4,9 @@ const axios = require('axios');
 
 router.get('/', async (req, res) => {
   try {
-    // CryptoCompare — no geo restrictions, no API key needed for basic data
     const [priceRes, historyRes] = await Promise.all([
       axios.get('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC&tsyms=USD'),
-      axios.get('https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=USD&limit=200')
+      axios.get('https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=USD&limit=400')
     ]);
 
     const raw    = priceRes.data.RAW.BTC.USD;
@@ -17,8 +16,9 @@ router.get('/', async (req, res) => {
     const low    = raw.LOW24HOUR;
     const vol    = raw.TOTALVOLUME24HTO;
 
-    // Historical closes for indicators
-    const closes = historyRes.data.Data.Data.map(d => d.close);
+    // Full klines and closes — used internally by /v1/signal
+    const klines1d = historyRes.data.Data.Data.map(d => [d.open, d.high, d.low, d.close]);
+    const closes   = klines1d.map(k => k[3]);
 
     // Moving averages
     const ma50  = closes.length >= 50  ? closes.slice(-50).reduce((a,b)=>a+b,0)/50   : null;
@@ -43,12 +43,12 @@ router.get('/', async (req, res) => {
     }
 
     // MACD bias
-    const ema12 = closes.slice(-12).reduce((a,b)=>a+b,0)/12;
-    const ema26 = closes.slice(-26).reduce((a,b)=>a+b,0)/26;
+    const ema12    = closes.slice(-12).reduce((a,b)=>a+b,0)/12;
+    const ema26    = closes.slice(-26).reduce((a,b)=>a+b,0)/26;
     const macdBias = ema12 > ema26 ? 'BULLISH' : 'BEARISH';
 
-    res.json({
-      endpoint: '/v1/price',
+    const response = {
+      endpoint:  '/v1/price',
       cost_sats: 3,
       data: {
         symbol:     'BTC/USD',
@@ -64,7 +64,18 @@ router.get('/', async (req, res) => {
         macd_bias:  macdBias,
       },
       timestamp: new Date().toISOString()
-    });
+    };
+
+    // Internal use only — full history for /v1/signal
+    // Exposed via ?full=true — not documented publicly
+    if (req.query.full === 'true') {
+      response.data._history = {
+        closes_1d: closes,
+        klines_1d: klines1d
+      };
+    }
+
+    res.json(response);
 
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch price data', detail: error.message });
