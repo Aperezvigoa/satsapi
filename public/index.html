@@ -1401,10 +1401,27 @@ async function runDemo() {
   const ep = document.getElementById('ep-select').value;
   const box = document.getElementById('demo-response');
   box.style.color = 'var(--muted)';
-  box.innerHTML = '<span style="color:var(--amber)">⚡ Generating Lightning invoice...</span>\n\n// invoice: lnbc100n1p...\n// payment received in 287ms\n// HTTP 200 — delivering data...';
-  await new Promise(r => setTimeout(r, 900));
-  box.style.color = 'var(--text)';
-  box.innerHTML = syntaxHighlight(demos[ep]());
+  box.innerHTML = '<span style="color:var(--amber)">⚡ Calling satsapi.dev...</span>';
+  
+  try {
+    const endpoints = {
+      price:       '/v1/price',
+      mempool:     '/v1/mempool',
+      onchain:     '/v1/onchain',
+      derivatives: '/v1/derivatives',
+      news:        '/v1/news',
+      signal:      '/v1/signal',
+      summary:     '/v1/summary',
+      tx:          '/v1/tx/4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b'
+    };
+
+    const res  = await fetch(`https://satsapi.dev${endpoints[ep]}`);
+    const data = await res.json();
+    box.style.color = 'var(--text)';
+    box.innerHTML = syntaxHighlight(data);
+  } catch(e) {
+    box.innerHTML = '<span style="color:var(--red)">// Error connecting to API — try again</span>';
+  }
 }
 
 function showTab(id) {
