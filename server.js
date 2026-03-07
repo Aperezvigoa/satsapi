@@ -1,8 +1,8 @@
 require('dotenv').config();
 const express = require('express');
-app.set('trust proxy', 1);
 const rateLimit = require('express-rate-limit');
 const app = express();
+app.set('trust proxy', 1); 
 
 const cors = require('cors');
 app.use(cors());
