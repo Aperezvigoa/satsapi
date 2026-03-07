@@ -436,10 +436,7 @@ Data: ${JSON.stringify(aiPayload)}`
     });
 
   } catch (error) {
-    res.status(500).json({
-      error: 'Failed to generate signal',
-      detail: error.message
-    });
+    res.status(500).json({ error: 'Failed to generate signal', detail: error.message, stack: error.stack });
   }
 });
 
