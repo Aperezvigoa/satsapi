@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="SatsAPI — Bitcoin market intelligence API. Pay per call in satoshis via Lightning Network. No subscriptions. No registration. 8 endpoints covering price, mempool, on-chain data, derivatives, AI signals and more.">
+<meta name="keywords" content="bitcoin api, lightning network api, l402, satoshis, btc signal api, mempool api, crypto data api, pay per call api">
+<meta property="og:title" content="SatsAPI — Bitcoin Intelligence, Pay Per Call">
+<meta property="og:description" content="8 endpoints. Real data. Pay in satoshis. No subscriptions.">
+<title>SatsAPI — Bitcoin Intelligence API</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;700&family=Barlow:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #060608;
+    --surface:  #0d0d10;
+    --surface2: #141418;
+    --border:   #1e1e24;
+    --border2:  #2a2a33;
+    --amber:    #f59e0b;
+    --amber-dim:#f59e0b22;
+    --amber-glow:#f59e0b0a;
+    --text:     #e2e0d8;
+    --muted:    #6b6a72;
+    --muted2:   #4a4952;
+    --green:    #34d399;
+    --red:      #f87171;
+    --blue:     #60a5fa;
+    --purple:   #a78bfa;
+  }
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* SCANLINE EFFECT */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* ──────────────────────────────────────
+     NAV
+  ────────────────────────────────────── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem 3rem;
+    background: rgba(6,6,8,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--amber);
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    background: var(--amber);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity:1; transform:scale(1); box-shadow:0 0 0 0 var(--amber-dim); }
+    50% { opacity:0.7; transform:scale(0.85); box-shadow:0 0 0 6px transparent; }
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--text); }
+
+  .nav-cta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--bg) !important;
+    background: var(--amber);
+    padding: 0.5rem 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: background 0.2s !important;
+  }
+
+  .nav-cta:hover { background: #fbbf24; color: var(--bg) !important; }
+
+  /* ──────────────────────────────────────
+     HERO
+  ────────────────────────────────────── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8rem 3rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Animated grid */
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.4;
+    mask-image: radial-gradient(ellipse 70% 80% at 20% 50%, black 20%, transparent 80%);
+  }
+
+  /* Amber glow blob */
+  .hero-glow {
+    position: absolute;
+    width: 800px; height: 600px;
+    background: radial-gradient(ellipse, #f59e0b08 0%, transparent 65%);
+    top: 50%; left: -10%;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 10;
+    max-width: 900px;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.7s ease 0.1s forwards;
+  }
+
+  .hero-tag::before {
+    content: '';
+    width: 32px; height: 1px;
+    background: var(--amber);
+  }
+
+  h1 {
+    font-size: clamp(3.5rem, 8vw, 8rem);
+    font-weight: 900;
+    line-height: 0.92;
+    letter-spacing: -0.04em;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.7s ease 0.25s forwards;
+  }
+
+  h1 em {
+    font-style: normal;
+    color: var(--amber);
+    position: relative;
+  }
+
+  h1 em::after {
+    content: '';
+    position: absolute;
+    bottom: 4px; left: 0; right: 0;
+    height: 3px;
+    background: var(--amber);
+    opacity: 0.4;
+  }
+
+  .hero-sub {
+    font-size: 1.25rem;
+    font-weight: 300;
+    color: var(--muted);
+    max-width: 560px;
+    line-height: 1.7;
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeUp 0.7s ease 0.4s forwards;
+  }
+
+  .hero-sub strong { color: var(--text); font-weight: 600; }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.7s ease 0.55s forwards;
+  }
+
+  .btn-primary {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--bg);
+    background: var(--amber);
+    border: none;
+    padding: 1rem 2.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-primary:hover {
+    background: #fbbf24;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px #f59e0b33;
+  }
+
+  .btn-ghost {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--border2);
+    padding: 1rem 2.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+  /* LIVE TICKER */
+  .ticker-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeUp 0.7s ease 0.9s forwards;
+  }
+
+  .ticker-inner {
+    display: flex;
+    gap: 5rem;
+    padding: 0.75rem 0;
+    animation: tickerScroll 30s linear infinite;
+    width: max-content;
+  }
+
+  @keyframes tickerScroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  .ticker-item {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    display: flex;
+    gap: 0.75rem;
+    color: var(--muted);
+  }
+
+  .ticker-label { color: var(--muted2); }
+  .ticker-val   { color: var(--text); }
+  .ticker-up    { color: var(--green); }
+  .ticker-down  { color: var(--red); }
+
+  /* HERO STATS */
+  .hero-stats {
+    position: absolute;
+    right: 3rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    z-index: 10;
+    opacity: 0;
+    animation: fadeLeft 0.7s ease 0.7s forwards;
+  }
+
+  @keyframes fadeLeft {
+    from { opacity:0; transform: translateY(-50%) translateX(20px); }
+    to   { opacity:1; transform: translateY(-50%) translateX(0); }
+  }
+
+  .hero-stat {
+    text-align: right;
+    border-right: 2px solid var(--border2);
+    padding-right: 1.5rem;
+  }
+
+  .hero-stat-val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--amber);
+    line-height: 1;
+  }
+
+  .hero-stat-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-top: 0.3rem;
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(24px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  /* ──────────────────────────────────────
+     SECTIONS
+  ────────────────────────────────────── */
+  section {
+    padding: 6rem 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-label::before {
+    content: '';
+    width: 24px; height: 1px;
+    background: var(--amber);
+  }
+
+  h2 {
+    font-size: clamp(2.2rem, 4vw, 4rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin-bottom: 1rem;
+  }
+
+  h2 span { color: var(--amber); }
+
+  .section-desc {
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 520px;
+    line-height: 1.7;
+    font-weight: 300;
+    margin-bottom: 3.5rem;
+  }
+
+  /* DIVIDER */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border2), transparent);
+  }
+
+  /* ──────────────────────────────────────
+     ENDPOINTS
+  ────────────────────────────────────── */
+  #endpoints { max-width: 100%; padding: 6rem 3rem; }
+
+  .endpoints-header {
+    max-width: 1200px;
+    margin: 0 auto 3rem;
+  }
+
+  .endpoints-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  @media (max-width: 900px) {
+    .endpoints-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .endpoints-grid { grid-template-columns: 1fr; }
+  }
+
+  .ep-card {
+    background: var(--bg);
+    padding: 2rem;
+    transition: background 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ep-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, var(--amber-glow), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .ep-card:hover { background: var(--surface); }
+  .ep-card:hover::after { opacity: 1; }
+
+  .ep-method {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    background: var(--amber-dim);
+    color: var(--amber);
+    padding: 0.2rem 0.6rem;
+    display: inline-block;
+    margin-bottom: 1rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .ep-path {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+  }
+
+  .ep-desc {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.65;
+    margin-bottom: 1.5rem;
+    font-weight: 300;
+  }
+
+  .ep-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .ep-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--muted);
+    border: 1px solid var(--border2);
+    padding: 0.15rem 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .ep-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .ep-cost {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--amber);
+  }
+
+  .ep-rate {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted2);
+    text-transform: uppercase;
+  }
+
+  /* ──────────────────────────────────────
+     LIVE DEMO
+  ────────────────────────────────────── */
+  .demo-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 3rem;
+  }
+
+  @media (max-width: 700px) {
+    .demo-layout { grid-template-columns: 1fr; }
+  }
+
+  .demo-panel {
+    background: var(--bg);
+    padding: 2rem;
+  }
+
+  .demo-panel-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted2);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .demo-panel-label span {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 0.8rem 1rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    margin-bottom: 1rem;
+  }
+
+  select:focus { border-color: var(--amber); }
+
+  .cost-display {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .cost-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--amber);
+    line-height: 1;
+  }
+
+  .cost-unit {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .cost-eur {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted2);
+    margin-left: auto;
+  }
+
+  .run-btn {
+    width: 100%;
+    background: var(--amber);
+    color: var(--bg);
+    border: none;
+    padding: 1rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.2s;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+
+  .run-btn:hover { background: #fbbf24; transform: translateY(-1px); }
+  .run-btn:active { transform: translateY(0); }
+
+  .response-area {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    line-height: 1.9;
+    min-height: 280px;
+    white-space: pre-wrap;
+    overflow-y: auto;
+    max-height: 400px;
+    transition: all 0.3s;
+  }
+
+  .j-key    { color: var(--blue); }
+  .j-str    { color: var(--green); }
+  .j-num    { color: var(--purple); }
+  .j-bool   { color: var(--amber); }
+  .j-null   { color: var(--muted); }
+  .j-punc   { color: var(--muted2); }
+
+  /* ──────────────────────────────────────
+     CODE EXAMPLE
+  ────────────────────────────────────── */
+  .code-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-tab {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    border: none;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+
+  .code-tab.active { color: var(--amber); background: var(--bg); border-bottom: 2px solid var(--amber); margin-bottom: -1px; }
+  .code-tab:hover:not(.active) { color: var(--text); }
+
+  .code-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: none;
+    padding: 2rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.9;
+    white-space: pre;
+    overflow-x: auto;
+    display: none;
+  }
+
+  .code-block.active { display: block; }
+
+  .c-comment  { color: var(--muted2); }
+  .c-keyword  { color: var(--purple); }
+  .c-string   { color: var(--green); }
+  .c-func     { color: var(--blue); }
+  .c-var      { color: var(--amber); }
+  .c-num      { color: #f9a8d4; }
+
+  /* ──────────────────────────────────────
+     HOW IT WORKS
+  ────────────────────────────────────── */
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 3rem;
+    counter-reset: step;
+  }
+
+  @media (max-width: 800px) { .steps-grid { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 480px) { .steps-grid { grid-template-columns: 1fr; } }
+
+  .step-card {
+    background: var(--bg);
+    padding: 2.5rem 2rem;
+    counter-increment: step;
+    position: relative;
+  }
+
+  .step-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--border2);
+    line-height: 1;
+    margin-bottom: 1.5rem;
+  }
+
+  .step-num::before {
+    content: counter(step, decimal-leading-zero);
+  }
+
+  .step-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+  }
+
+  .step-desc {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  .step-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: var(--amber);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+
+  .step-card:hover::after { transform: scaleX(1); }
+
+  /* ──────────────────────────────────────
+     PRICING TABLE
+  ────────────────────────────────────── */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 3rem;
+  }
+
+  @media (max-width: 700px) { .pricing-grid { grid-template-columns: repeat(2,1fr); } }
+
+  .price-card {
+    background: var(--bg);
+    padding: 2rem 1.5rem;
+    text-align: center;
+    transition: background 0.2s;
+  }
+
+  .price-card:hover { background: var(--surface); }
+
+  .price-ep {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted2);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+  }
+
+  .price-sats {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--amber);
+    line-height: 1;
+  }
+
+  .price-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.4rem;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .price-eur {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted2);
+    margin-top: 0.5rem;
+  }
+
+  /* EARNINGS CALC */
+  .calc-box {
+    margin-top: 2rem;
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    padding: 2rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 2.2;
+  }
+
+  .calc-row {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding: 0.4rem 0;
+  }
+
+  .calc-row:last-child { border-bottom: none; font-weight: 700; color: var(--green); font-size: 1rem; }
+  .calc-label { color: var(--muted); }
+  .calc-val   { color: var(--text); }
+
+  /* ──────────────────────────────────────
+     FOR BOTS SECTION
+  ────────────────────────────────────── */
+  .bots-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 3rem;
+  }
+
+  @media (max-width: 600px) { .bots-grid { grid-template-columns: 1fr; } }
+
+  .bot-card {
+    background: var(--bg);
+    padding: 2.5rem 2rem;
+  }
+
+  .bot-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .bot-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+
+  .bot-desc {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  /* ──────────────────────────────────────
+     FOOTER
+  ────────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .footer-left {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 2;
+  }
+
+  .footer-left strong { color: var(--amber); }
+
+  .footer-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+
+  .footer-links a {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted2);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--amber); }
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    SATS_API
+  </div>
+  <ul class="nav-links">
+    <li><a href="#endpoints">Endpoints</a></li>
+    <li><a href="#demo">Demo</a></li>
+    <li><a href="#code">Code</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#demo" class="nav-cta">Try Now</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+
+  <div class="hero-content">
+    <div class="hero-tag">Bitcoin Intelligence API · Lightning Network · L402</div>
+    <h1>Market data.<br><em>Pay in sats.</em></h1>
+    <p class="hero-sub">
+      <strong>8 endpoints</strong> covering price, mempool, on-chain data, derivatives, AI-powered signals and more.
+      No subscription. No registration. No API key. Just pay per call in satoshis.
+    </p>
+    <div class="hero-actions">
+      <a href="#demo" class="btn-primary">Try it live →</a>
+      <a href="#code" class="btn-ghost">View code</a>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-val">8</div>
+      <div class="hero-stat-label">Endpoints</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val" id="stat-price">—</div>
+      <div class="hero-stat-label">BTC / USD</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val" id="stat-fng">—</div>
+      <div class="hero-stat-label">Fear & Greed</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val">L402</div>
+      <div class="hero-stat-label">Protocol</div>
+    </div>
+  </div>
+
+  <div class="ticker-bar">
+    <div class="ticker-inner" id="ticker">
+      <div class="ticker-item"><span class="ticker-label">BTC/USD</span><span class="ticker-val" id="t-price">loading...</span></div>
+      <div class="ticker-item"><span class="ticker-label">MEMPOOL</span><span class="ticker-val" id="t-mempool">loading...</span></div>
+      <div class="ticker-item"><span class="ticker-label">BLOCK</span><span class="ticker-val" id="t-block">loading...</span></div>
+      <div class="ticker-item"><span class="ticker-label">F&G INDEX</span><span class="ticker-val" id="t-fng">loading...</span></div>
+      <div class="ticker-item"><span class="ticker-label">BTC/USD</span><span class="ticker-val" id="t-price2">—</span></div>
+      <div class="ticker-item"><span class="ticker-label">MEMPOOL</span><span class="ticker-val" id="t-mempool2">—</span></div>
+      <div class="ticker-item"><span class="ticker-label">BLOCK</span><span class="ticker-val" id="t-block2">—</span></div>
+      <div class="ticker-item"><span class="ticker-label">F&G INDEX</span><span class="ticker-val" id="t-fng2">—</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ENDPOINTS -->
+<div id="endpoints">
+  <div class="endpoints-header">
+    <div class="section-label">Endpoints</div>
+    <h2>Eight endpoints.<br><span>Real intelligence.</span></h2>
+    <p class="section-desc">Every endpoint returns structured JSON optimized for both humans and AI agents. No wrappers, no noise.</p>
+  </div>
+
+  <div class="endpoints-grid">
+    <div class="ep-card">
+      <div class="ep-method">GET</div>
+      <div class="ep-path">/v1/price</div>
+      <div class="ep-desc">Real-time BTC price with RSI, 50/200-day moving averages, MACD bias and trend direction.</div>
+      <div class="ep-tags"><span class="ep-tag">Binance</span><span class="ep-tag">RSI</span><span class="ep-tag">MACD</span></div>
+      <div class="ep-footer"><div class="ep-cost">3 sats</div><div class="ep-rate">60 req/min</div></div>
+    </div>
+    <div class="ep-card">
+      <div class="ep-method">GET</div>
+      <div class="ep-path">/v1/mempool</div>
+      <div class="ep-desc">Mempool status with optimal fees for 10min, 30min and 1h confirmation windows. Last block data.</div>
+      <div class="ep-tags"><span class="ep-tag">mempool.space</span><span class="ep-tag">Fees</span></div>
+      <div class="ep-footer"><div class="ep-cost">2 sats</div><div class="ep-rate">60 req/min</div></div>
+    </div>
+    <div class="ep-card">
+      <div class="ep-method">GET</div>
+      <div class="ep-path">/v1/tx/:txid</div>
+      <div class="ep-desc">Transaction lookup by TXID. Returns status, confirmations, fee rate, inputs, outputs and block time.</div>
+      <div class="ep-tags"><span class="ep-tag">Confirmed</span><span class="ep-tag">Pending</span></div>
+      <div class="ep-footer"><div class="ep-cost">2 sats</div><div class="ep-rate">60 req/min</div></div>
+    </div>
+    <div class="ep-card">
+      <div class="ep-method">GET</div>
+      <div class="ep-path">/v1/onchain</div>
+      <div class="ep-desc">Fear & Greed index with 7-day history, BTC dominance, circulating supply, hash rate and market phase detection.</div>
+      <div class="ep-tags"><span class="ep-tag">Fear&Greed</span><span class="ep-tag">Hashrate</span><span class="ep-tag">Supply</span></div>
+      <div class="ep-footer"><div class="ep-cost">15 sats</div><div class="ep-rate">60 req/min</div></div>
+    </div>
+    <div class="ep-card">
+      <div class="ep-method">GET</div>
+      <div class="ep-path">/v1/derivatives</div>
+      <div class="ep-desc">Bybit perpetuals data: funding rate, open interest trend, long/short ratio, leverage risk assessment.</div>
+      <div class="ep-tags"><span class="ep-tag">Funding</span><span class="ep-tag">OI</span><span class="ep-tag">L/S Ratio</span></div>
+      <div class="ep-footer"><div class="ep-cost">15 sats</div><div class="ep-rate">60 req/min</div></div>
+    </div>
+    <div class="ep-card">
+      <div class="ep-method">GET</div>
+      <div class="ep-path">/v1/news</div>
+      <div class="ep-desc">AI-generated daily crypto news summary. Sentiment score, top 3 events and market impact analysis. Cached 6h.</div>
+      <div class="ep-tags"><span class="ep-tag">AI</span><span class="ep-tag">Sentiment</span><span class="ep-tag">Cached</span></div>
+      <div class="ep-footer"><div class="ep-cost">50 sats</div><div class="ep-rate">10 req/min</div></div>
+    </div>
+    <div class="ep-card">
+      <div class="ep-method">GET</div>
+      <div class="ep-path">/v1/signal</div>
+      <div class="ep-desc">9-factor BUY/SELL/HOLD signal with confluence score, Pi Cycle Top, multi-timeframe RSI and ATR-based trade setup.</div>
+      <div class="ep-tags"><span class="ep-tag">AI</span><span class="ep-tag">Pi Cycle</span><span class="ep-tag">ATR</span><span class="ep-tag">Multi-TF</span></div>
+      <div class="ep-footer"><div class="ep-cost">200 sats</div><div class="ep-rate">10 req/min</div></div>
+    </div>
+    <div class="ep-card" style="border: 1px solid var(--amber); background: var(--amber-glow);">
+      <div class="ep-method" style="background:var(--amber); color:var(--bg);">GET ★</div>
+      <div class="ep-path">/v1/summary</div>
+      <div class="ep-desc">Everything in one call. Market score 0–100, executive summary by AI, risk matrix, key levels, bot-ready flat fields.</div>
+      <div class="ep-tags"><span class="ep-tag">All-in-one</span><span class="ep-tag">Bot-ready</span><span class="ep-tag">Risk matrix</span></div>
+      <div class="ep-footer"><div class="ep-cost">200 sats</div><div class="ep-rate">5 req/min</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- DEMO -->
+<section id="demo">
+  <div class="section-label">Live Demo</div>
+  <h2>Try it.<br><span>No signup required.</span></h2>
+  <p class="section-desc">These demos simulate real API responses. In production, each call generates a Lightning invoice paid instantly.</p>
+
+  <div class="demo-layout">
+    <div class="demo-panel">
+      <div class="demo-panel-label"><span></span> Select endpoint</div>
+      <select id="ep-select" onchange="updateCost()">
+        <option value="price">GET /v1/price</option>
+        <option value="mempool">GET /v1/mempool</option>
+        <option value="tx">GET /v1/tx/:txid</option>
+        <option value="onchain">GET /v1/onchain</option>
+        <option value="derivatives">GET /v1/derivatives</option>
+        <option value="news">GET /v1/news</option>
+        <option value="signal">GET /v1/signal</option>
+        <option value="summary">GET /v1/summary</option>
+      </select>
+      <div class="cost-display">
+        <div class="cost-num" id="demo-cost">10</div>
+        <div class="cost-unit">sats / call</div>
+        <div class="cost-eur" id="demo-eur">≈ 0.002€</div>
+      </div>
+      <button class="run-btn" onclick="runDemo()">⚡ Execute call</button>
+    </div>
+    <div class="demo-panel">
+      <div class="demo-panel-label"><span></span> Response</div>
+      <div class="response-area" id="demo-response">// Select an endpoint and execute to see a live response...</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CODE EXAMPLES -->
+<section id="code">
+  <div class="section-label">Integration</div>
+  <h2>Three lines.<br><span>Any language.</span></h2>
+  <p class="section-desc">SatsAPI follows standard REST conventions. If you can fetch JSON, you can use SatsAPI.</p>
+
+  <div class="code-tabs">
+    <button class="code-tab active" onclick="showTab('js')">JavaScript</button>
+    <button class="code-tab" onclick="showTab('python')">Python</button>
+    <button class="code-tab" onclick="showTab('curl')">cURL</button>
+    <button class="code-tab" onclick="showTab('bot')">AI Agent</button>
+  </div>
+
+  <div class="code-block active" id="tab-js"><span class="c-comment">// Fetch market signal — pay 100 sats via Lightning</span>
+<span class="c-keyword">const</span> <span class="c-var">response</span> = <span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">'https://satsapi.io/v1/signal'</span>);
+
+<span class="c-comment">// If 402, pay the Lightning invoice first</span>
+<span class="c-keyword">if</span> (response.status === <span class="c-num">402</span>) {
+  <span class="c-keyword">const</span> <span class="c-var">invoice</span> = response.headers.<span class="c-func">get</span>(<span class="c-string">'WWW-Authenticate'</span>);
+  <span class="c-keyword">await</span> <span class="c-var">wallet</span>.<span class="c-func">pay</span>(<span class="c-var">invoice</span>); <span class="c-comment">// instant, &lt;1s</span>
+  <span class="c-keyword">const</span> <span class="c-var">data</span> = <span class="c-keyword">await</span> (<span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">'https://satsapi.io/v1/signal'</span>)).<span class="c-func">json</span>();
+  console.<span class="c-func">log</span>(<span class="c-var">data</span>.data.signal); <span class="c-comment">// "BUY" | "SELL" | "HOLD"</span>
+}</div>
+
+  <div class="code-block" id="tab-python"><span class="c-keyword">import</span> requests
+
+<span class="c-comment"># Fetch full market summary — 200 sats</span>
+<span class="c-var">r</span> = requests.<span class="c-func">get</span>(<span class="c-string">"https://satsapi.io/v1/summary"</span>)
+
+<span class="c-keyword">if</span> r.status_code == <span class="c-num">402</span>:
+    <span class="c-var">invoice</span> = r.headers[<span class="c-string">"WWW-Authenticate"</span>]
+    <span class="c-var">wallet</span>.<span class="c-func">pay</span>(<span class="c-var">invoice</span>)  <span class="c-comment"># pay Lightning invoice</span>
+    <span class="c-var">data</span> = requests.<span class="c-func">get</span>(<span class="c-string">"https://satsapi.io/v1/summary"</span>).<span class="c-func">json</span>()
+    <span class="c-func">print</span>(<span class="c-var">data</span>[<span class="c-string">"data"</span>][<span class="c-string">"bot_ready"</span>][<span class="c-string">"signal"</span>])  <span class="c-comment"># "HOLD"</span>
+    <span class="c-func">print</span>(<span class="c-var">data</span>[<span class="c-string">"data"</span>][<span class="c-string">"bot_ready"</span>][<span class="c-string">"confluence"</span>])  <span class="c-comment"># 52</span></div>
+
+  <div class="code-block" id="tab-curl"><span class="c-comment"># Basic price check — 3 sats</span>
+<span class="c-func">curl</span> https://satsapi.io/v1/price
+
+<span class="c-comment"># Response: HTTP 402 + Lightning invoice in header</span>
+<span class="c-comment"># Pay invoice → repeat request → get JSON data</span>
+
+<span class="c-comment"># Full market summary — 200 sats</span>
+<span class="c-func">curl</span> https://satsapi.io/v1/summary
+
+<span class="c-comment"># Transaction lookup</span>
+<span class="c-func">curl</span> https://satsapi.io/v1/tx/<span class="c-var">YOUR_TXID_HERE</span></div>
+
+  <div class="code-block" id="tab-bot"><span class="c-comment">// AI Agent integration example (LangChain / AutoGPT)</span>
+<span class="c-keyword">const</span> <span class="c-var">tool</span> = {
+  name: <span class="c-string">"bitcoin_market_intelligence"</span>,
+  description: <span class="c-string">"Get BTC market signal, price levels, risk matrix"</span>,
+  <span class="c-keyword">async</span> <span class="c-func">call</span>() {
+    <span class="c-keyword">const</span> <span class="c-var">data</span> = <span class="c-keyword">await</span> <span class="c-func">satsApiCall</span>(<span class="c-string">"/v1/summary"</span>); <span class="c-comment">// 200 sats</span>
+    <span class="c-keyword">return</span> <span class="c-var">data</span>.bot_ready; <span class="c-comment">// flat, typed, zero-parsing needed</span>
+    <span class="c-comment">// { signal: "HOLD", confluence: 52, market_score: 59,</span>
+    <span class="c-comment">//   price_usd: 67872, fear_greed: 12, ... }</span>
+  }
+};
+
+<span class="c-comment">// Bot pays automatically via Lightning — no human needed</span>
+<span class="c-comment">// Compatible with lnget, Aperture, LNC, WebLN</span></div>
+</section>
+
+<div class="divider"></div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-label">Protocol</div>
+  <h2>How <span>L402</span> works.</h2>
+  <p class="section-desc">The Lightning Network 402 protocol makes pay-per-call APIs possible without accounts, cards or subscriptions.</p>
+
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num"></div>
+      <div class="step-title">You make the request</div>
+      <div class="step-desc">Call any endpoint like a standard REST API. The server responds with HTTP 402 and a Lightning invoice in the header.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num"></div>
+      <div class="step-title">Pay the invoice</div>
+      <div class="step-desc">Your Lightning wallet (or agent) pays the invoice in milliseconds. No redirects. No waiting. No account needed.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num"></div>
+      <div class="step-title">Receive the data</div>
+      <div class="step-desc">The server verifies payment and returns the full JSON response. The entire cycle takes under one second.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num"></div>
+      <div class="step-title">Bots pay automatically</div>
+      <div class="step-desc">AI agents using lnget or WebLN complete the payment loop without human intervention. True autonomous API consumption.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FOR BOTS -->
+<section id="bots">
+  <div class="section-label">AI Agents</div>
+  <h2>Built for <span>bots.</span></h2>
+  <p class="section-desc">Every response includes a <code style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:0.9em">bot_ready</code> object — a flat, typed payload with zero parsing required.</p>
+
+  <div class="bots-grid">
+    <div class="bot-card">
+      <span class="bot-icon">⚡</span>
+      <div class="bot-title">Native Lightning payments</div>
+      <div class="bot-desc">Agents pay via L402 without human involvement. Compatible with lnget, Aperture, LNC and WebLN. No API key management, no rate limit tiers to negotiate.</div>
+    </div>
+    <div class="bot-card">
+      <span class="bot-icon">🤖</span>
+      <div class="bot-title">Flat bot_ready fields</div>
+      <div class="bot-desc"><code style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:0.85em">if (data.signal === 'BUY' && data.confluence > 65)</code> — that's all your agent needs. No nested parsing, no normalization, no guesswork.</div>
+    </div>
+    <div class="bot-card">
+      <span class="bot-icon">📊</span>
+      <div class="bot-title">Structured for LLM context</div>
+      <div class="bot-desc">The executive_summary field provides analyst-grade narrative in plain English, ready to inject directly into an LLM prompt for downstream reasoning.</div>
+    </div>
+    <div class="bot-card">
+      <span class="bot-icon">🛡️</span>
+      <div class="bot-title">Predictable rate limits</div>
+      <div class="bot-desc">Clear per-endpoint limits returned in headers. Your agent always knows how fast it can call and plans accordingly. No surprise 429s mid-strategy.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-label">Pricing</div>
+  <h2>Pay exactly<br><span>what you use.</span></h2>
+  <p class="section-desc">No monthly fees. No tiers. No surprises. Each call costs a fixed number of satoshis, settled instantly on Lightning.</p>
+
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-ep">/v1/price</div>
+      <div class="price-sats">3</div>
+      <div class="price-label">sats / call</div>
+      <div class="price-eur">≈ 0.002€</div>
+    </div>
+    <div class="price-card">
+      <div class="price-ep">/v1/mempool + /v1/tx</div>
+      <div class="price-sats">2</div>
+      <div class="price-label">sats / call</div>
+      <div class="price-eur">≈ 0.002€</div>
+    </div>
+    <div class="price-card">
+      <div class="price-ep">/v1/onchain + derivatives</div>
+      <div class="price-sats">15</div>
+      <div class="price-label">sats / call</div>
+      <div class="price-eur">≈ 0.012€</div>
+    </div>
+    <div class="price-card">
+      <div class="price-ep">/v1/news</div>
+      <div class="price-sats">50</div>
+      <div class="price-label">sats / call</div>
+      <div class="price-eur">≈ 0.040€</div>
+    </div>
+    <div class="price-card">
+      <div class="price-ep">/v1/signal</div>
+      <div class="price-sats">150</div>
+      <div class="price-label">sats / call</div>
+      <div class="price-eur">≈ 0.160€</div>
+    </div>
+    <div class="price-card" style="border:1px solid var(--amber); background:var(--amber-glow);">
+      <div class="price-ep">/v1/summary ★</div>
+      <div class="price-sats" style="font-size:2rem">200</div>
+      <div class="price-label">sats / call</div>
+      <div class="price-eur">≈ 0.160€</div>
+    </div>
+    <div class="price-card" style="grid-column: span 2; text-align:left; padding:2rem;">
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:0.72rem; color:var(--muted); line-height:2.2">
+        vs. Glassnode Pro: <span style="color:var(--red)">$29/month ($0.97/day)</span><br>
+        vs. CryptoQuant: <span style="color:var(--red)">$20/month ($0.67/day)</span><br>
+        SatsAPI at 500 calls/day avg mix: <span style="color:var(--green)">~$0.12/day ($3.60/month)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="calc-box">
+    <div class="calc-row"><span class="calc-label">1,000 calls/day · avg 55 sats/call</span><span class="calc-val">55,000 sats/day</span></div>
+    <div class="calc-row"><span class="calc-label">BTC at $68,000</span><span class="calc-val">≈ $37.40 / day</span></div>
+    <div class="calc-row"><span class="calc-label">Monthly revenue estimate</span><span class="calc-val">≈ $1,122 / month</span></div>
+    <div class="calc-row"><span class="calc-label">Hosting cost (Railway)</span><span class="calc-val">−$5 / month</span></div>
+    <div class="calc-row"><span class="calc-label">Net at 1,000 calls/day</span><span class="calc-val calc-green">≈ $1,117 / month in BTC</span></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">
+    <strong>SATS_API</strong> · Bitcoin market intelligence · Pay per call · Lightning Network · L402<br>
+    Built on: Binance · Bybit · mempool.space · Alternative.me · CoinGecko · Claude AI
+  </div>
+  <ul class="footer-links">
+    <li><a href="#endpoints">Endpoints</a></li>
+    <li><a href="#code">Docs</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="https://github.com/satsapi" target="_blank">GitHub</a></li>
+  </ul>
+</footer>
+
+<script>
+// ── DEMO RESPONSES ──
+const costs = { price:3, mempool:2, tx:2, onchain:15, derivatives:15, news:50, signal:150, summary:200 };
+const eursPerSat = 0.00082;
+
+const demos = {
+  price: () => ({
+    endpoint:'/v1/price', cost_sats:3,
+    data:{ symbol:'BTC/USD', price:67872.13, change_24h:'-0.88%', high_24h:68583.28, low_24h:67446.41,
+      volume_24h:'$38.2B', ma_50:74791.14, ma_200:95681.40, rsi_14:49.8, trend:'BEARISH', macd_bias:'BEARISH' },
+    timestamp: new Date().toISOString()
+  }),
+  mempool: () => ({
+    endpoint:'/v1/mempool', cost_sats:2,
+    data:{ pending_txs:24797, pending_size:'24.1 MB', congestion:'LOW',
+      fees:{ fast_10min:'2 sat/vB', medium_30min:'1 sat/vB', slow_1h:'1 sat/vB', minimum:'1 sat/vB' },
+      last_block:{ height:939741, tx_count:812, size_kb:'398.4 KB' }},
+    timestamp: new Date().toISOString()
+  }),
+  tx: () => ({
+    endpoint:'/v1/tx/:txid', cost_sats:2,
+    data:{ txid:'a1b2c3...f6e7', status:'CONFIRMED', confirmations:14, block_height:939725,
+      fee_sats:1240, fee_rate:'12 sat/vB', size_bytes:225, inputs:1, outputs:2, value_btc:'0.00285000' },
+    timestamp: new Date().toISOString()
+  }),
+  onchain: () => ({
+    endpoint:'/v1/onchain', cost_sats:15,
+    data:{ fear_and_greed:{ value:12, label:'Extreme Fear', trend:'DETERIORATING', yesterday:18, week_ago:14 },
+      dominance:{ btc_dominance:'56.6%', altcoin_season:false, total_market_cap_trillion:2.4 },
+      supply:{ circulating_btc:19999143, remaining_btc:1000857, percent_mined:'95.23%', max_supply:21000000 },
+      network:{ hashrate_eh:1051.3, hashrate_trend:'INCREASING' },
+      market_phase:{ phase:'EXTREME_FEAR', note:'Maximum pessimism — historically best buying opportunities' }},
+    timestamp: new Date().toISOString()
+  }),
+  derivatives: () => ({
+    endpoint:'/v1/derivatives', cost_sats:15,
+    data:{ funding_rate:{ current_pct:-0.0007, annualized_pct:-0.8, bias:'NEUTRAL' },
+      open_interest:{ btc:48133, usd_billion:3.27, trend:'DECREASING' },
+      long_short:{ long_pct:64.2, short_pct:35.8, sentiment:'MAJORITY_LONG', note:'Over 60% accounts long — contrarian bearish signal' },
+      leverage_risk:'LOW' },
+    timestamp: new Date().toISOString()
+  }),
+  news: () => ({
+    endpoint:'/v1/news', cost_sats:50, cached:true,
+    data:{ sentiment:'BEARISH', score:0.3,
+      summary:'Bitcoin faces significant selling pressure with $349M in ETF outflows and 27,000 BTC moved to exchanges by short-term holders.',
+      top_events:['ETF outflows hit $349M — institutional demand pause','27K BTC sent to exchanges by short-term holders','Stagflation fears dampen risk appetite'] },
+    timestamp: new Date().toISOString()
+  }),
+  signal: () => ({
+    endpoint:'/v1/signal', cost_sats:150,
+    data:{ signal:'HOLD', confluence:52, confidence:0.518, risk_level:'HIGH',
+      reasoning:'HOLD at $67,872 with 52% confluence — 4H RSI at 6.2 signals extreme short-term oversold while bearish MA trend and negative news create conflicting pressure. Watch for 4H RSI recovery above 30 to confirm directional bias.',
+      historical_context:'F&G below 20 preceded +40% BTC gains within 90 days in 7 of 9 occurrences since 2019.',
+      trade_setup: null,
+      technicals:{ price_usd:67872.13, rsi_1d:49.8, rsi_4h:6.2, rsi_1h:42.8, pi_cycle_ratio_pct:41.94, atr_14d:3518.49 }},
+    timestamp: new Date().toISOString()
+  }),
+  summary: () => ({
+    endpoint:'/v1/summary', cost_sats:200,
+    data:{ market_score:59, market_score_label:'NEUTRAL',
+      executive_summary:'Bitcoin consolidates at $67,872 in extreme fear (F&G: 12) with hash rate at ATH 1,051 EH/s, creating a classic divergence between network strength and price sentiment. Critical support at $60,835 — a break below would likely trigger capitulation toward $57,300. With 64.2% of accounts long and open interest decreasing, derivatives signal exhaustion of sellers but insufficient buyer conviction. Accumulate 25% position on dips toward $60,835 with hard stops at $58,000.',
+      bot_ready:{ signal:'HOLD', confluence:52, market_score:59, price_usd:67872.13, rsi_1d:49.8, rsi_4h:6.2,
+        fear_greed:12, fear_greed_label:'Extreme Fear', funding_bias:'NEUTRAL', long_pct:64.2,
+        leverage_risk:'LOW', support:60835.15, resistance:74791.12, highest_risk:'OPPORTUNITY' },
+      risk_matrix:[{ level:'OPPORTUNITY', note:'F&G at 12 — historically strong accumulation zone' },
+        { level:'OPPORTUNITY', note:'4H RSI at 6.2 — extreme short-term oversold' }]},
+    timestamp: new Date().toISOString()
+  })
+};
+
+function syntaxHighlight(json) {
+  const str = JSON.stringify(json, null, 2);
+  return str
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      if (/^"/.test(m)) {
+        if (/:$/.test(m)) return `<span class="j-key">${m}</span>`;
+        return `<span class="j-str">${m}</span>`;
+      }
+      if (/true|false/.test(m)) return `<span class="j-bool">${m}</span>`;
+      if (/null/.test(m))       return `<span class="j-null">${m}</span>`;
+      return `<span class="j-num">${m}</span>`;
+    })
+    .replace(/[{}\[\],]/g, m => `<span class="j-punc">${m}</span>`);
+}
+
+function updateCost() {
+  const ep = document.getElementById('ep-select').value;
+  const sats = costs[ep];
+  document.getElementById('demo-cost').textContent = sats;
+  document.getElementById('demo-eur').textContent = `≈ ${(sats * eursPerSat).toFixed(3)}€`;
+}
+
+async function runDemo() {
+  const ep = document.getElementById('ep-select').value;
+  const box = document.getElementById('demo-response');
+  box.style.color = 'var(--muted)';
+  box.innerHTML = '<span style="color:var(--amber)">⚡ Generating Lightning invoice...</span>\n\n// invoice: lnbc100n1p...\n// payment received in 287ms\n// HTTP 200 — delivering data...';
+  await new Promise(r => setTimeout(r, 900));
+  box.style.color = 'var(--text)';
+  box.innerHTML = syntaxHighlight(demos[ep]());
+}
+
+function showTab(id) {
+  document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.code-block').forEach(b => b.classList.remove('active'));
+  document.querySelector(`#tab-${id}`).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── LIVE DATA ──
+async function fetchLiveData() {
+  try {
+    const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
+    const d = await r.json();
+    const price = parseFloat(d.lastPrice).toLocaleString('en-US', { style:'currency', currency:'USD', maximumFractionDigits:0 });
+    const chg   = parseFloat(d.priceChangePercent).toFixed(2);
+    const cls   = chg > 0 ? 'ticker-up' : 'ticker-down';
+    const sign  = chg > 0 ? '+' : '';
+    ['t-price','t-price2'].forEach(id => {
+      document.getElementById(id).innerHTML = `${price} <span class="${cls}">(${sign}${chg}%)</span>`;
+    });
+    document.getElementById('stat-price').textContent = price;
+  } catch(e) {}
+
+  try {
+    const r2 = await fetch('https://mempool.space/api/v1/fees/recommended');
+    const d2  = await r2.json();
+    const txt = `Fast: ${d2.fastestFee} sat/vB`;
+    ['t-mempool','t-mempool2'].forEach(id => document.getElementById(id).textContent = txt);
+  } catch(e) {}
+
+  try {
+    const r3 = await fetch('https://mempool.space/api/blocks/tip/height');
+    const h   = await r3.text();
+    const txt = `#${parseInt(h).toLocaleString()}`;
+    ['t-block','t-block2'].forEach(id => document.getElementById(id).textContent = txt);
+  } catch(e) {}
+
+  try {
+    const r4 = await fetch('https://api.alternative.me/fng/?limit=1');
+    const d4  = await r4.json();
+    const val = d4.data[0].value;
+    const lbl = d4.data[0].value_classification;
+    const cls = val < 35 ? 'ticker-down' : val > 65 ? 'ticker-up' : 'ticker-val';
+    ['t-fng','t-fng2'].forEach(id => {
+      document.getElementById(id).innerHTML = `<span class="${cls}">${val} — ${lbl}</span>`;
+    });
+    document.getElementById('stat-fng').textContent = val;
+  } catch(e) {}
+}
+
+fetchLiveData();
+setInterval(fetchLiveData, 30000);
+</script>
+</body>
+</html>
