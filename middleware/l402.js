@@ -24,11 +24,12 @@ function getEndpointCost(path) {
 }
 
 async function createInvoice(amountSat, description) {
+  console.log('Calling phoenixd:', PHOENIXD_URL, 'password:', PHOENIXD_PASSWORD ? 'set' : 'NOT SET');
   const response = await axios.post(
     `${PHOENIXD_URL}/createinvoice`,
     new URLSearchParams({ amountSat, description, expirySeconds: 300 }),
     {
-      auth: { username: 'phoenix', password: PHOENIXD_PASSWORD },
+      auth: { username: '', password: PHOENIXD_PASSWORD },
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     }
   );
