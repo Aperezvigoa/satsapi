@@ -155,9 +155,9 @@ router.get('/', async (req, res) => {
       derivativesRes
     ] = await Promise.all([
       // 350 daily candles — enough for Pi Cycle (needs 350DMA)
-      axios.get('https://api.bybit.com/v5/market/kline?category=linear&symbol=BTCUSDT&interval=D&limit=400'),
-      axios.get('https://api.bybit.com/v5/market/kline?category=linear&symbol=BTCUSDT&interval=240&limit=100'),
-      axios.get('https://api.bybit.com/v5/market/kline?category=linear&symbol=BTCUSDT&interval=60&limit=50'),
+      axios.get('https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=USD&limit=400'),
+      axios.get('https://min-api.cryptocompare.com/data/v2/histohour?fsym=BTC&tsym=USD&limit=100&aggregate=4'),
+      axios.get('https://min-api.cryptocompare.com/data/v2/histohour?fsym=BTC&tsym=USD&limit=50'),
       axios.get(`${base}/v1/onchain`),
       axios.get(`${base}/v1/news`),
       axios.get(`${base}/v1/mempool`),
@@ -165,14 +165,12 @@ router.get('/', async (req, res) => {
     ]);
 
     // Parse klines → [open, high, low, close]
-    const parseKlines = (raw) => raw.data.result.list
-    .map(k => [
-        parseFloat(k[1]), // open
-        parseFloat(k[2]), // high
-        parseFloat(k[3]), // low
-        parseFloat(k[4])  // close
-    ])
-    .reverse(); // Bybit returns newest first
+    const parseKlines = (raw) => raw.data.Data.Data.map(k => [
+        k.open,
+        k.high,
+        k.low,
+        k.close
+    ]);
 
     const klines1dParsed = parseKlines(klines1d);
     const klines4hParsed = parseKlines(klines4h);
