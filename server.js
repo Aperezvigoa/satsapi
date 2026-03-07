@@ -6,6 +6,9 @@ const app = express();
 const cors = require('cors');
 app.use(cors());
 
+const l402 = require('./middleware/l402');
+app.use(l402);
+
 app.use(express.json());
 app.use(express.static('public'));
 
