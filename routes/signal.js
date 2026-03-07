@@ -146,22 +146,21 @@ router.get('/', async (req, res) => {
 
     // Fetch market data + our endpoints in parallel
     const [
-      klines1d,
-      klines4h,
-      klines1h,
-      onchainRes,
-      newsRes,
-      mempoolRes,
-      derivativesRes
+        klines1d,
+        klines4h,
+        klines1h,
+        onchainRes,
+        newsRes,
+        mempoolRes,
+        derivativesRes
     ] = await Promise.all([
-      // 350 daily candles — enough for Pi Cycle (needs 350DMA)
-      axios.get('https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=USD&limit=400'),
-      axios.get('https://min-api.cryptocompare.com/data/v2/histohour?fsym=BTC&tsym=USD&limit=100&aggregate=4'),
-      axios.get('https://min-api.cryptocompare.com/data/v2/histohour?fsym=BTC&tsym=USD&limit=50'),
-      axios.get(`${base}/v1/onchain`),
-      axios.get(`${base}/v1/news`),
-      axios.get(`${base}/v1/mempool`),
-      axios.get(`${base}/v1/derivatives`)
+        axios.get('https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=USD&limit=400', { timeout: 10000 }),
+        axios.get('https://min-api.cryptocompare.com/data/v2/histohour?fsym=BTC&tsym=USD&limit=100&aggregate=4', { timeout: 10000 }),
+        axios.get('https://min-api.cryptocompare.com/data/v2/histohour?fsym=BTC&tsym=USD&limit=50', { timeout: 10000 }),
+        axios.get(`${base}/v1/onchain`,     { timeout: 15000 }),
+        axios.get(`${base}/v1/news`,        { timeout: 30000 }),
+        axios.get(`${base}/v1/mempool`,     { timeout: 10000 }),
+        axios.get(`${base}/v1/derivatives`, { timeout: 15000 }),
     ]);
 
     // Parse klines → [open, high, low, close]
