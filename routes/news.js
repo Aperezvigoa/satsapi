@@ -28,7 +28,21 @@ router.get('/', async (req, res) => {
       'https://min-api.cryptocompare.com/data/v2/news/?lang=EN&categories=BTC&sortOrder=popular'
     );
 
-    const articles = newsRes.data.Data.slice(0, 10);
+    // CryptoCompare v2 returns data.Data (array) — handle both old and new structure
+    const rawData = newsRes.data?.Data;
+    let articles = [];
+    if (Array.isArray(rawData)) {
+      articles = rawData.slice(0, 10);
+    } else if (rawData?.Data && Array.isArray(rawData.Data)) {
+      articles = rawData.Data.slice(0, 10);
+    } else {
+      throw new Error('Unexpected news API response structure');
+    }
+
+    if (articles.length === 0) {
+      throw new Error('No articles returned from news API');
+    }
+
     const headlines = articles.map((a, i) => `${i + 1}. ${a.title}`).join('\n');
 
     // Ask Claude to summarize and analyze

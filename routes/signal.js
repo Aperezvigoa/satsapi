@@ -116,24 +116,25 @@ router.get('/', async (req, res) => {
   try {
     const base = process.env.BASE_URL || 'http://localhost:3000';
 
-    // ── ALL DATA FROM OUR OWN ENDPOINTS — zero external rate limit risk ──
-    const [rPrice, rOnchain, rNews, rMempool, rDerivatives] = await Promise.allSettled([
-      axios.get(`${base}/v1/price?full=true`, { timeout: 15000 }),
-      axios.get(`${base}/v1/onchain`,         { timeout: 15000 }),
-      axios.get(`${base}/v1/news`,            { timeout: 30000 }),
-      axios.get(`${base}/v1/mempool`,         { timeout: 10000 }),
-      axios.get(`${base}/v1/derivatives`,     { timeout: 15000 }),
+    // ── FETCH PRICE + HISTORY DIRECTLY FROM CRYPTOCOMPARE ──
+    // Avoids internal routing issues in Railway/cloud environments
+    const [rPriceFull, rHistory, rOnchain, rNews, rMempool, rDerivatives] = await Promise.allSettled([
+      axios.get('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC&tsyms=USD', { timeout: 15000 }),
+      axios.get('https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=USD&limit=400', { timeout: 15000 }),
+      axios.get(`${base}/v1/onchain`,     { timeout: 15000 }),
+      axios.get(`${base}/v1/news`,        { timeout: 30000 }),
+      axios.get(`${base}/v1/mempool`,     { timeout: 10000 }),
+      axios.get(`${base}/v1/derivatives`, { timeout: 15000 }),
     ]);
 
-    if (rPrice.status !== 'fulfilled' || !rPrice.value.data?.data?._history) {
-        return res.status(500).json({ error: 'Failed to generate signal', detail: 'Price data unavailable' });
+    if (rPriceFull.status !== 'fulfilled' || rHistory.status !== 'fulfilled') {
+      return res.status(500).json({ error: 'Failed to generate signal', detail: 'Price data unavailable' });
     }
 
-    const priceResponse = rPrice.value.data;
-    const priceData     = priceResponse.data;
-    const klines1d      = priceData._history.klines_1d;
-    const closes1d      = priceData._history.closes_1d;
-    const price         = priceData.price;
+    const raw      = rPriceFull.value.data.RAW.BTC.USD;
+    const price    = raw.PRICE;
+    const klines1d = rHistory.value.data.Data.Data.map(d => [d.open, d.high, d.low, d.close]);
+    const closes1d = klines1d.map(k => k[3]);
 
     // Approximate multi-timeframe closes from daily data
     // 4h ≈ every 4th daily close interpolated; 1h ≈ last 50 daily closes
