@@ -13,6 +13,7 @@ app.use(l402);
 
 app.use(express.json());
 app.use(express.static('public'));
+app.get('/docs', (req, res) => res.redirect('/docs.html'));
 
 // ─────────────────────────────────────────
 // RATE LIMITERS
