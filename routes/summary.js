@@ -25,17 +25,18 @@ router.get('/', async (req, res) => {
     }
 
     const base = process.env.BASE_URL || 'http://localhost:3000';
+    const internalHeaders = { 'x-internal-secret': process.env.INTERNAL_SECRET || 'satsapi-internal' };
 
     // ─────────────────────────────────────────
     // FIX 1: Promise.allSettled + timeouts individuales
     // Si un endpoint falla, el summary sigue adelante con fallback
     // ─────────────────────────────────────────
     const [signalRes, onchainRes, derivativesRes, mempoolRes, newsRes] = await Promise.allSettled([
-      axios.get(`${base}/v1/signal`,      { timeout: 45000 }),
-      axios.get(`${base}/v1/onchain`,     { timeout: 15000 }),
-      axios.get(`${base}/v1/derivatives`, { timeout: 15000 }),
-      axios.get(`${base}/v1/mempool`,     { timeout: 10000 }),
-      axios.get(`${base}/v1/news`,        { timeout: 30000 }),
+      axios.get(`${base}/v1/signal`,      { timeout: 45000, headers: internalHeaders }),
+      axios.get(`${base}/v1/onchain`,     { timeout: 15000, headers: internalHeaders }),
+      axios.get(`${base}/v1/derivatives`, { timeout: 15000, headers: internalHeaders }),
+      axios.get(`${base}/v1/mempool`,     { timeout: 10000, headers: internalHeaders }),
+      axios.get(`${base}/v1/news`,        { timeout: 30000, headers: internalHeaders }),
     ]);
 
     // ─────────────────────────────────────────

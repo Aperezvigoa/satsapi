@@ -50,6 +50,12 @@ async function l402Middleware(req, res, next) {
     return next();
   }
 
+  // Bypass para llamadas internas entre endpoints (summary → signal, etc.)
+  const internalSecret = process.env.INTERNAL_SECRET || 'satsapi-internal';
+  if (req.headers['x-internal-secret'] === internalSecret) {
+    return next();
+  }
+
   const cost = getEndpointCost(req.path);
   if (!cost) return next();
 
