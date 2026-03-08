@@ -101,19 +101,6 @@ app.get('/', (req, res) => {
   });
 });
 
-app.get('/admin/seed', async (req, res) => {
-  const axios = require('axios');
-  try {
-    const result = await axios.get(
-      `${process.env.PHOENIXD_URL}/getmnemonics`,
-      { auth: { username: '', password: process.env.PHOENIXD_PASSWORD } }
-    );
-    res.json(result.data);
-  } catch(e) {
-    res.json({ error: e.message, status: e.response?.status });
-  }
-});
-
 // ─────────────────────────────────────────
 // 404 HANDLER
 // ─────────────────────────────────────────
