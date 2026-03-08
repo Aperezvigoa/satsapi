@@ -633,10 +633,10 @@
   </div>
   <div class="calc-box">
     <div class="calc-row"><span class="calc-label">1,000 calls/day · avg 55 sats/call</span><span class="calc-val">55,000 sats/day</span></div>
-    <div class="calc-row"><span class="calc-label">BTC at $84,000</span><span class="calc-val">≈ $46.20 / day</span></div>
-    <div class="calc-row"><span class="calc-label">Monthly revenue estimate</span><span class="calc-val">≈ $1,386 / month</span></div>
-    <div class="calc-row"><span class="calc-label">Hosting cost (Railway)</span><span class="calc-val">−$5 / month</span></div>
-    <div class="calc-row"><span class="calc-label">Net at 1,000 calls/day</span><span class="calc-val">≈ $1,381 / month in BTC</span></div>
+    <div class="calc-row"><span class="calc-label">BTC at <span id="calc-btc-price">$—</span></span><span class="calc-val" id="calc-usd-day">≈ $— / day</span></div>
+    <div class="calc-row"><span class="calc-label">Monthly revenue estimate</span><span class="calc-val" id="calc-usd-month">≈ $— / month</span></div>
+    <div class="calc-row"><span class="calc-label">Hosting cost (Railway + DigitalOcean)</span><span class="calc-val">−$11 / month</span></div>
+    <div class="calc-row"><span class="calc-label">Net at 1,000 calls/day</span><span class="calc-val" id="calc-net">≈ $— / month in BTC</span></div>
   </div>
 </section>
 
@@ -681,18 +681,26 @@ async function runDemo() {
   const ep  = document.getElementById('ep-select').value;
   const box = document.getElementById('demo-response');
   box.innerHTML = '<span style="color:var(--amber)">// Fetching live data from satsapi.dev...</span>';
-  const paths = {
-    price:'/v1/price', mempool:'/v1/mempool', onchain:'/v1/onchain',
-    derivatives:'/v1/derivatives', news:'/v1/news', signal:'/v1/signal', summary:'/v1/summary',
-    tx:'/v1/tx/4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b'
-  };
-  try {
-    const res  = await fetch(`${API}${paths[ep]}`);
-    const data = await res.json();
+  // price usa /v1/demo (gratis). El resto requiere pago — mostramos mensaje claro.
+  if (ep === 'price') {
+    try {
+      const res  = await fetch(`${API}/v1/demo`);
+      const data = await res.json();
+      box.style.color = 'var(--text)';
+      box.innerHTML = syntaxHighlight(data);
+    } catch(e) {
+      box.innerHTML = '<span style="color:var(--red)">// Error connecting to API — try again</span>';
+    }
+  } else {
+    const costs = {mempool:2,tx:2,onchain:15,derivatives:15,news:50,signal:150,summary:200};
+    const sats = costs[ep] || '?';
     box.style.color = 'var(--text)';
-    box.innerHTML = syntaxHighlight(data);
-  } catch(e) {
-    box.innerHTML = '<span style="color:var(--red)">// Error connecting to API — try again</span>';
+    box.innerHTML = syntaxHighlight({
+      message: `This endpoint costs ${sats} sats per call.`,
+      how_to_pay: 'Send request → receive 402 with Lightning invoice → pay → resend with ?payment_hash=',
+      docs: 'https://satsapi.dev/docs',
+      free_demo: 'Select GET /v1/price for a free live demo'
+    });
   }
 }
 
@@ -717,6 +725,18 @@ async function fetchLiveData() {
         document.getElementById(id).innerHTML = `${price} <span class="${cls}">(${sign}${p.change_24h})</span>`;
       });
       document.getElementById('stat-price').textContent = price;
+      // Actualizar calculadora con precio real
+      const btcNum = parseFloat(p.price);
+      if (btcNum) {
+        const perDay   = (55000 * btcNum / 1e8).toFixed(2);
+        const perMonth = (perDay * 30).toFixed(0);
+        const net      = (perMonth - 11).toFixed(0);
+        const el = document.getElementById('calc-btc-price');
+        if (el) el.textContent = '$' + Math.round(btcNum).toLocaleString();
+        const d = document.getElementById('calc-usd-day');   if (d) d.textContent = `≈ $${perDay} / day`;
+        const m = document.getElementById('calc-usd-month'); if (m) m.textContent = `≈ $${perMonth} / month`;
+        const n = document.getElementById('calc-net');       if (n) n.textContent = `≈ $${net} / month in BTC`;
+      }
       const rCls = p.rsi_14 < 35 ? 'ticker-down' : p.rsi_14 > 65 ? 'ticker-up' : 'ticker-val';
       ['t-rsi','t-rsi2'].forEach(id => { document.getElementById(id).innerHTML = `<span class="${rCls}">${p.rsi_14}</span>`; });
       const tCls = p.trend === 'BULLISH' ? 'ticker-up' : p.trend === 'BEARISH' ? 'ticker-down' : 'ticker-val';

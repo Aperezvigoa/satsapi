@@ -7,6 +7,8 @@ app.set('trust proxy', 1);
 const cors = require('cors');
 app.use(cors());
 
+app.use('/v1/demo', demoLimiter, require('./routes/demo'));
+
 const l402 = require('./middleware/l402');
 app.use(l402);
 
@@ -16,6 +18,19 @@ app.use(express.static('public'));
 // ─────────────────────────────────────────
 // RATE LIMITERS
 // ─────────────────────────────────────────
+
+// Demo endpoint — 5 calls per hour per IP
+const demoLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: 'Rate limit reached',
+    detail: 'Max 5 free demo calls per hour. Pay with Lightning for full access.',
+    docs: 'https://satsapi.dev/docs'
+  }
+});
 
 // Standard endpoints — 60 calls per minute per IP
 const standardLimiter = rateLimit({
@@ -108,7 +123,7 @@ app.use((req, res) => {
   res.status(404).json({
     error: 'Endpoint not found',
     available_endpoints: ['/v1/price', '/v1/mempool', '/v1/tx/:txid', '/v1/onchain', '/v1/derivatives', '/v1/news', '/v1/signal', '/v1/summary'],
-    docs: 'https://satsapi.io/docs'
+    docs: 'https://satsapi.dev/docs'
   });
 });
 
