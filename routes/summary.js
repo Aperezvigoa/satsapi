@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
       if (minutesSince < CACHE_MINUTES) {
         return res.json({
           endpoint: '/v1/summary',
-          cost_sats: 150,
+          cost_sats: 200,
           cached: true,
           cache_age_seconds: Math.round((now - cache.timestamp) / 1000),
           data: cache.data,
@@ -26,47 +26,92 @@ router.get('/', async (req, res) => {
 
     const base = process.env.BASE_URL || 'http://localhost:3000';
 
-    // Fetch all endpoints in parallel
-    const [signalRes, onchainRes, derivativesRes, mempoolRes, newsRes] = await Promise.all([
-      axios.get(`${base}/v1/signal`),
-      axios.get(`${base}/v1/onchain`),
-      axios.get(`${base}/v1/derivatives`),
-      axios.get(`${base}/v1/mempool`),
-      axios.get(`${base}/v1/news`)
+    // ─────────────────────────────────────────
+    // FIX 1: Promise.allSettled + timeouts individuales
+    // Si un endpoint falla, el summary sigue adelante con fallback
+    // ─────────────────────────────────────────
+    const [signalRes, onchainRes, derivativesRes, mempoolRes, newsRes] = await Promise.allSettled([
+      axios.get(`${base}/v1/signal`,      { timeout: 45000 }),
+      axios.get(`${base}/v1/onchain`,     { timeout: 15000 }),
+      axios.get(`${base}/v1/derivatives`, { timeout: 15000 }),
+      axios.get(`${base}/v1/mempool`,     { timeout: 10000 }),
+      axios.get(`${base}/v1/news`,        { timeout: 30000 }),
     ]);
 
-    const signal      = signalRes.data.data;
-    const onchain     = onchainRes.data.data;
-    const derivatives = derivativesRes.data.data;
-    const mempool     = mempoolRes.data.data;
-    const news        = newsRes.data.data;
+    // ─────────────────────────────────────────
+    // FIX 2: Signal es obligatorio — sin él no tiene sentido el summary
+    // ─────────────────────────────────────────
+    if (signalRes.status !== 'fulfilled') {
+      console.error('Summary: signal endpoint failed:', signalRes.reason?.message);
+      return res.status(500).json({
+        error: 'Failed to generate market summary',
+        detail: 'Signal data unavailable: ' + (signalRes.reason?.message || 'unknown error')
+      });
+    }
 
-    const price    = signal.technicals.price_usd;
-    const atr      = signal.technicals.atr_14d;
-    const ma50     = signal.technicals.ma_50;
-    const ma200    = signal.technicals.ma_200;
-    const bbUpper  = signal.technicals.bb_upper;
-    const bbLower  = signal.technicals.bb_lower;
-    const fng      = onchain.fear_and_greed.value;
+    const signal = signalRes.value.data.data;
+
+    // ─────────────────────────────────────────
+    // FIX 3: Fallbacks para endpoints opcionales
+    // ─────────────────────────────────────────
+    const onchain = onchainRes.status === 'fulfilled'
+      ? onchainRes.value.data.data
+      : {
+          fear_and_greed: { value: 50, label: 'Neutral', trend: 'STABLE' },
+          market_phase:   { phase: 'NEUTRAL', note: 'Data temporarily unavailable' },
+          network:        { hashrate_trend: 'STABLE', hashrate_eh: 'N/A' },
+          dominance:      { btc_dominance: 'N/A' },
+          supply:         { circulating: 'N/A' }
+        };
+
+    const derivatives = derivativesRes.status === 'fulfilled'
+      ? derivativesRes.value.data.data
+      : {
+          funding_rate:  { bias: 'NEUTRAL', current_pct: 0 },
+          long_short:    { long_pct: 50, note: 'Data unavailable' },
+          leverage_risk: 'MEDIUM',
+          open_interest: { usd_billion: 'N/A', trend: 'STABLE' }
+        };
+
+    const mempool = mempoolRes.status === 'fulfilled'
+      ? mempoolRes.value.data.data
+      : { congestion: 'LOW', pending_txs: 'N/A', fees: {} };
+
+    const news = newsRes.status === 'fulfilled'
+      ? newsRes.value.data.data
+      : { sentiment: 'NEUTRAL', score: 0.5, summary: 'News data temporarily unavailable', top_events: [] };
+
+    // Log fallbacks activos para debugging
+    if (onchainRes.status !== 'fulfilled')     console.warn('Summary: onchain fallback activo');
+    if (derivativesRes.status !== 'fulfilled') console.warn('Summary: derivatives fallback activo');
+    if (mempoolRes.status !== 'fulfilled')     console.warn('Summary: mempool fallback activo');
+    if (newsRes.status !== 'fulfilled')        console.warn('Summary: news fallback activo');
+
+    const price   = signal.technicals.price_usd;
+    const atr     = signal.technicals.atr_14d;
+    const ma50    = signal.technicals.ma_50;
+    const ma200   = signal.technicals.ma_200;
+    const bbUpper = signal.technicals.bb_upper;
+    const bbLower = signal.technicals.bb_lower;
+    const fng     = onchain.fear_and_greed.value;
 
     // ─────────────────────────────────────────
     // MARKET SCORE 0–100
-    // Weighted average of all available signals
     // ─────────────────────────────────────────
-    const confluenceNorm  = signal.confluence / 100;
-    const fngNorm         = fng <= 20 ? 0.85 : fng <= 35 ? 0.65 : fng <= 55 ? 0.50 : fng <= 75 ? 0.35 : 0.15;
-    const fundingNorm     = derivatives.funding_rate.bias === 'SHORTS_PAYING' ? 0.70
-                          : derivatives.funding_rate.bias === 'NEUTRAL'        ? 0.52
-                          : derivatives.long_short.long_pct > 65               ? 0.28
-                          : 0.45;
-    const newsNorm        = news.sentiment === 'BULLISH' ? 0.75
-                          : news.sentiment === 'NEUTRAL'  ? 0.50
-                          : 0.25;
-    const hashNorm        = onchain.network.hashrate_trend === 'INCREASING' ? 0.70 : 0.40;
-    const leverageNorm    = derivatives.leverage_risk === 'LOW'    ? 0.80
-                          : derivatives.leverage_risk === 'MEDIUM' ? 0.55
-                          : derivatives.leverage_risk === 'HIGH'   ? 0.30
-                          : 0.10;
+    const confluenceNorm = signal.confluence / 100;
+    const fngNorm        = fng <= 20 ? 0.85 : fng <= 35 ? 0.65 : fng <= 55 ? 0.50 : fng <= 75 ? 0.35 : 0.15;
+    const fundingNorm    = derivatives.funding_rate.bias === 'SHORTS_PAYING' ? 0.70
+                         : derivatives.funding_rate.bias === 'NEUTRAL'        ? 0.52
+                         : derivatives.long_short.long_pct > 65               ? 0.28
+                         : 0.45;
+    const newsNorm       = news.sentiment === 'BULLISH' ? 0.75
+                         : news.sentiment === 'NEUTRAL'  ? 0.50
+                         : 0.25;
+    const hashNorm       = onchain.network.hashrate_trend === 'INCREASING' ? 0.70 : 0.40;
+    const leverageNorm   = derivatives.leverage_risk === 'LOW'    ? 0.80
+                         : derivatives.leverage_risk === 'MEDIUM' ? 0.55
+                         : derivatives.leverage_risk === 'HIGH'   ? 0.30
+                         : 0.10;
 
     const marketScore = Math.round((
       confluenceNorm * 0.35 +
@@ -85,22 +130,21 @@ router.get('/', async (req, res) => {
 
     // ─────────────────────────────────────────
     // KEY PRICE LEVELS
-    // Calculated from ATR, MAs and Bollinger Bands
     // ─────────────────────────────────────────
     const keyLevels = {
       current_price: price,
       critical_support: parseFloat(Math.min(
         bbLower || price * 0.94,
-        ma200    || price * 0.90,
+        ma200   || price * 0.90,
         price - (atr ? atr * 2 : price * 0.06)
       ).toFixed(2)),
       key_resistance: parseFloat(Math.max(
         bbUpper || price * 1.06,
-        ma50     || price * 1.05
+        ma50    || price * 1.05
       ).toFixed(2)),
       invalidation_level: parseFloat((price - (atr ? atr * 3 : price * 0.09)).toFixed(2)),
-      ma_50:  parseFloat(ma50?.toFixed(2)),
-      ma_200: parseFloat(ma200?.toFixed(2)),
+      ma_50:    parseFloat(ma50?.toFixed(2)),
+      ma_200:   parseFloat(ma200?.toFixed(2)),
       bb_upper: bbUpper ? parseFloat(bbUpper.toFixed(2)) : null,
       bb_lower: bbLower ? parseFloat(bbLower.toFixed(2)) : null,
       distance_to_resistance_pct: bbUpper
@@ -113,7 +157,6 @@ router.get('/', async (req, res) => {
 
     // ─────────────────────────────────────────
     // RISK MATRIX
-    // Multiple risk dimensions in one place
     // ─────────────────────────────────────────
     const risks = [];
     if (signal.technicals.pi_cycle_ratio_pct > 85)
@@ -133,7 +176,6 @@ router.get('/', async (req, res) => {
 
     // ─────────────────────────────────────────
     // BOT-READY FIELDS
-    // Flat, typed, zero-interpretation needed
     // ─────────────────────────────────────────
     const botReady = {
       signal:             signal.signal,
@@ -144,7 +186,7 @@ router.get('/', async (req, res) => {
       rsi_1d:             signal.technicals.rsi_1d,
       rsi_4h:             signal.technicals.rsi_4h,
       rsi_1h:             signal.technicals.rsi_1h,
-      trend:              signal.market_context.market_phase,
+      trend:              signal.market_context?.market_phase,
       fear_greed:         fng,
       fear_greed_label:   onchain.fear_and_greed.label,
       funding_bias:       derivatives.funding_rate.bias,
@@ -159,8 +201,8 @@ router.get('/', async (req, res) => {
       atr_14d:            atr,
       support:            keyLevels.critical_support,
       resistance:         keyLevels.key_resistance,
-      stop_loss:          signal.trade_setup?.stop_loss || null,
-      target_1:           signal.trade_setup?.target_1  || null,
+      stop_loss:          signal.trade_setup?.stop_loss  || null,
+      target_1:           signal.trade_setup?.target_1   || null,
       risk_reward:        signal.trade_setup?.risk_reward || null,
       highest_risk:       risks[0]?.level || 'LOW',
       timestamp_unix:     Math.floor(now.getTime() / 1000),
@@ -168,7 +210,7 @@ router.get('/', async (req, res) => {
 
     // ─────────────────────────────────────────
     // AI EXECUTIVE SUMMARY
-    // Analyst-grade, 4 sentences max
+    // FIX 4: Timeout explícito en la llamada a Claude
     // ─────────────────────────────────────────
     const aiRes = await axios.post(
       'https://api.anthropic.com/v1/messages',
@@ -205,6 +247,7 @@ Current data snapshot:
         }]
       },
       {
+        timeout: 30000, // FIX 4: timeout explícito para no colgar Railway
         headers: {
           'x-api-key': process.env.ANTHROPIC_API_KEY,
           'anthropic-version': '2023-06-01',
@@ -219,15 +262,10 @@ Current data snapshot:
     // FINAL RESPONSE
     // ─────────────────────────────────────────
     const result = {
-      // ── HEADLINE ──
       market_score:       marketScore,
       market_score_label: marketScoreLabel,
       executive_summary:  executiveSummary,
-
-      // ── BOT-READY ──
-      bot_ready: botReady,
-
-      // ── SIGNAL ──
+      bot_ready:          botReady,
       signal: {
         action:             signal.signal,
         confluence:         signal.confluence,
@@ -237,30 +275,22 @@ Current data snapshot:
         historical_context: signal.historical_context,
         trade_setup:        signal.trade_setup,
       },
-
-      // ── KEY LEVELS ──
-      key_levels: keyLevels,
-
-      // ── RISK MATRIX ──
-      risk_matrix: risks,
-
-      // ── MARKET LAYERS ──
-      technicals:     signal.technicals,
-      onchain:        onchain,
-      derivatives:    derivatives,
+      key_levels:   keyLevels,
+      risk_matrix:  risks,
+      technicals:   signal.technicals,
+      onchain:      onchain,
+      derivatives:  derivatives,
       mempool: {
-        congestion:   mempool.congestion,
-        pending_txs:  mempool.pending_txs,
-        fees:         mempool.fees,
+        congestion:  mempool.congestion,
+        pending_txs: mempool.pending_txs,
+        fees:        mempool.fees,
       },
       news: {
-        sentiment:    news.sentiment,
-        score:        news.score,
-        summary:      news.summary,
-        top_events:   news.top_events,
+        sentiment:  news.sentiment,
+        score:      news.score,
+        summary:    news.summary,
+        top_events: news.top_events,
       },
-
-      // ── FACTOR BREAKDOWN ──
       factors: signal.factors,
     };
 
@@ -275,6 +305,7 @@ Current data snapshot:
     });
 
   } catch (error) {
+    console.error('Summary error:', error.message);
     res.status(500).json({
       error: 'Failed to generate market summary',
       detail: error.message
