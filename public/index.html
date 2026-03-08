@@ -49,7 +49,6 @@
   .nav-cta:hover { background:#fbbf24 !important; }
   .nav-toggle { display:none; background:none; border:none; cursor:pointer; padding:0.5rem; }
   .nav-toggle svg { width:22px; height:22px; stroke:var(--text); stroke-width:2; fill:none; }
-
   @media (max-width:768px) {
     nav { padding:1rem 1.5rem; }
     .nav-toggle { display:block; }
@@ -137,7 +136,6 @@
   .hero-stat { text-align:right; border-right:2px solid var(--border2); padding-right:1.5rem; }
   .hero-stat-val { font-family:'IBM Plex Mono',monospace; font-size:1.6rem; font-weight:700; color:var(--amber); line-height:1; }
   .hero-stat-label { font-family:'IBM Plex Mono',monospace; font-size:0.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.12em; margin-top:0.3rem; }
-
   @media (max-width:900px) {
     .hero { padding:7rem 1.5rem 4rem; }
     .hero-stats { display:none; }
@@ -160,13 +158,11 @@
   }
   .ticker-label{color:var(--muted2)} .ticker-val{color:var(--text)}
   .ticker-up{color:var(--green)} .ticker-down{color:var(--red)}
-
   @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
 
   /* SECTIONS */
   section { padding:5rem 3rem; max-width:1200px; margin:0 auto; }
   @media (max-width:768px) { section { padding:4rem 1.5rem; } }
-
   .section-label {
     font-family:'IBM Plex Mono',monospace; font-size:0.68rem; color:var(--amber);
     text-transform:uppercase; letter-spacing:0.2em; margin-bottom:1rem;
@@ -189,7 +185,6 @@
   }
   @media (max-width:1000px) { .endpoints-grid { grid-template-columns:repeat(2,1fr); } }
   @media (max-width:560px)  { .endpoints-grid { grid-template-columns:1fr; } }
-
   .ep-card {
     background:var(--bg); padding:2rem; transition:background 0.2s;
     position:relative; overflow:hidden;
@@ -272,7 +267,7 @@
   @media (max-width:480px) { .code-block { padding:1.25rem; font-size:0.7rem; } }
   .code-block.active { display:block; }
   .c-comment{color:var(--muted2)} .c-keyword{color:var(--purple)} .c-string{color:var(--green)}
-  .c-func{color:var(--blue)} .c-var{color:var(--amber)} .c-num{color:#f9a8d4}
+  .c-func{color:var(--blue)} .c-var{color:var(--amber)} .c-num2{color:#f9a8d4}
 
   /* HOW IT WORKS */
   .steps-grid {
@@ -371,7 +366,7 @@
     </p>
     <div class="hero-actions">
       <a href="#demo" class="btn-primary">Try it live →</a>
-      <a href="/docs" class="btn-ghost">View docs →</a>
+      <a href="/docs.html" class="btn-ghost">View docs →</a>
     </div>
   </div>
   <div class="hero-stats">
@@ -472,12 +467,12 @@
 <section id="demo">
   <div class="section-label">Live Demo</div>
   <h2>Try it.<br><span>No signup required.</span></h2>
-  <p class="section-desc">Real-time data from the live API. Every call hits satsapi.dev directly.</p>
+  <p class="section-desc">Real data from the live API. <code style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:0.85em">/v1/price</code> is free — other endpoints require a Lightning payment.</p>
   <div class="demo-layout">
     <div class="demo-panel">
       <div class="demo-panel-label"><div class="live-dot"></div> Select endpoint</div>
       <select id="ep-select" onchange="updateCost()">
-        <option value="price">GET /v1/price</option>
+        <option value="price">GET /v1/price — free demo</option>
         <option value="mempool">GET /v1/mempool</option>
         <option value="tx">GET /v1/tx/:txid</option>
         <option value="onchain">GET /v1/onchain</option>
@@ -487,15 +482,15 @@
         <option value="summary">GET /v1/summary</option>
       </select>
       <div class="cost-display">
-        <div class="cost-num" id="demo-cost">3</div>
-        <div class="cost-unit">sats / call</div>
-        <div class="cost-eur" id="demo-eur">≈ 0.002€</div>
+        <div class="cost-num" id="demo-cost">FREE</div>
+        <div class="cost-unit" id="demo-unit">demo</div>
+        <div class="cost-eur" id="demo-eur"></div>
       </div>
       <button class="run-btn" onclick="runDemo()">Execute call →</button>
     </div>
     <div class="demo-panel">
       <div class="demo-panel-label"><div class="live-dot"></div> Response</div>
-      <div class="response-area" id="demo-response">// Select an endpoint and execute...</div>
+      <div class="response-area" id="demo-response">// Select an endpoint and click Execute...</div>
     </div>
   </div>
 </section>
@@ -505,61 +500,92 @@
 <section id="code">
   <div class="section-label">Integration</div>
   <h2>Three lines.<br><span>Any language.</span></h2>
-  <p class="section-desc">Standard REST. If you can fetch JSON, you can use SatsAPI. <a href="/docs" style="color:var(--amber);text-decoration:none">Full docs →</a></p>
+  <p class="section-desc">Standard REST + L402. If you can fetch JSON, you can use SatsAPI. <a href="/docs.html" style="color:var(--amber);text-decoration:none">Full docs →</a></p>
   <div class="code-tabs">
     <button class="code-tab active" onclick="showTab('js',event)">JavaScript</button>
     <button class="code-tab" onclick="showTab('python',event)">Python</button>
     <button class="code-tab" onclick="showTab('curl',event)">cURL</button>
     <button class="code-tab" onclick="showTab('bot',event)">AI Agent</button>
   </div>
-  <div class="code-block active" id="tab-js"><span class="c-comment">// 1. Call the endpoint</span>
-<span class="c-keyword">const</span> <span class="c-var">res</span> = <span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">'https://satsapi.dev/v1/signal'</span>);
 
-<span class="c-comment">// 2. If 402 Payment Required, pay the Lightning invoice</span>
-<span class="c-keyword">if</span> (res.status === <span class="c-num">402</span>) {
-  <span class="c-keyword">const</span> <span class="c-var">invoice</span> = res.headers.<span class="c-func">get</span>(<span class="c-string">'WWW-Authenticate'</span>);
-  <span class="c-keyword">await</span> <span class="c-var">wallet</span>.<span class="c-func">pay</span>(<span class="c-var">invoice</span>); <span class="c-comment">// instant Lightning payment</span>
+  <div class="code-block active" id="tab-js"><span class="c-comment">// 1. Make the request</span>
+<span class="c-keyword">let</span> <span class="c-var">res</span> = <span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">'https://satsapi.dev/v1/signal'</span>);
 
-  <span class="c-comment">// 3. Repeat request with payment token</span>
-  <span class="c-keyword">const</span> <span class="c-var">data</span> = <span class="c-keyword">await</span> (<span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">'https://satsapi.dev/v1/signal'</span>)).<span class="c-func">json</span>();
-  console.<span class="c-func">log</span>(<span class="c-var">data</span>.data.signal); <span class="c-comment">// "BUY" | "SELL" | "HOLD"</span>
-}</div>
+<span class="c-comment">// 2. Server returns HTTP 402 + Lightning invoice</span>
+<span class="c-keyword">if</span> (res.status === <span class="c-num2">402</span>) {
+  <span class="c-keyword">const</span> <span class="c-var">body</span>    = <span class="c-keyword">await</span> res.<span class="c-func">json</span>();
+  <span class="c-keyword">const</span> <span class="c-var">invoice</span> = <span class="c-var">body</span>.invoice; <span class="c-comment">// BOLT11 Lightning invoice</span>
+  <span class="c-keyword">const</span> <span class="c-var">hash</span>    = <span class="c-var">body</span>.payment_hash;
+
+  <span class="c-keyword">await</span> <span class="c-var">wallet</span>.<span class="c-func">payInvoice</span>(<span class="c-var">invoice</span>); <span class="c-comment">// pay via Lightning (~instant)</span>
+
+  <span class="c-comment">// 3. Resend with payment proof</span>
+  <span class="c-var">res</span> = <span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">`https://satsapi.dev/v1/signal?payment_hash=<span class="c-var">${hash}</span>`</span>);
+}
+
+<span class="c-keyword">const</span> <span class="c-var">data</span> = <span class="c-keyword">await</span> <span class="c-var">res</span>.<span class="c-func">json</span>();
+console.<span class="c-func">log</span>(<span class="c-var">data</span>.data.signal);     <span class="c-comment">// "BUY" | "SELL" | "HOLD"</span>
+console.<span class="c-func">log</span>(<span class="c-var">data</span>.data.confluence); <span class="c-comment">// 0–100 confidence score</span></div>
+
   <div class="code-block" id="tab-python"><span class="c-keyword">import</span> requests
 
-<span class="c-comment"># 1. Call the endpoint</span>
-<span class="c-var">r</span> = requests.<span class="c-func">get</span>(<span class="c-string">"https://satsapi.dev/v1/summary"</span>)
+<span class="c-comment"># 1. Make the request</span>
+<span class="c-var">r</span> = requests.<span class="c-func">get</span>(<span class="c-string">'https://satsapi.dev/v1/signal'</span>)
 
-<span class="c-comment"># 2. If 402, pay the Lightning invoice</span>
-<span class="c-keyword">if</span> r.status_code == <span class="c-num">402</span>:
-    <span class="c-var">invoice</span> = r.headers[<span class="c-string">"WWW-Authenticate"</span>]
-    <span class="c-var">wallet</span>.<span class="c-func">pay</span>(<span class="c-var">invoice</span>)
+<span class="c-comment"># 2. Server returns 402 + Lightning invoice in response body</span>
+<span class="c-keyword">if</span> <span class="c-var">r</span>.status_code == <span class="c-num2">402</span>:
+    <span class="c-var">body</span>    = <span class="c-var">r</span>.<span class="c-func">json</span>()
+    <span class="c-var">invoice</span> = <span class="c-var">body</span>[<span class="c-string">'invoice'</span>]        <span class="c-comment"># BOLT11 string</span>
+    <span class="c-var">phash</span>   = <span class="c-var">body</span>[<span class="c-string">'payment_hash'</span>]   <span class="c-comment"># hex string</span>
 
-    <span class="c-comment"># 3. Repeat request</span>
-    <span class="c-var">data</span> = requests.<span class="c-func">get</span>(<span class="c-string">"https://satsapi.dev/v1/summary"</span>).<span class="c-func">json</span>()
-    <span class="c-func">print</span>(<span class="c-var">data</span>[<span class="c-string">"data"</span>][<span class="c-string">"bot_ready"</span>][<span class="c-string">"signal"</span>])   <span class="c-comment"># "HOLD"</span></div>
-  <div class="code-block" id="tab-curl"><span class="c-comment"># Price — 3 sats</span>
-<span class="c-func">curl</span> https://satsapi.dev/v1/price
+    <span class="c-var">wallet</span>.<span class="c-func">pay_invoice</span>(<span class="c-var">invoice</span>)       <span class="c-comment"># pay via any LN wallet/lib</span>
 
-<span class="c-comment"># Full summary — 200 sats</span>
-<span class="c-func">curl</span> https://satsapi.dev/v1/summary
+    <span class="c-comment"># 3. Resend with payment proof</span>
+    <span class="c-var">r</span> = requests.<span class="c-func">get</span>(
+        <span class="c-string">'https://satsapi.dev/v1/signal'</span>,
+        params={<span class="c-string">'payment_hash'</span>: <span class="c-var">phash</span>}
+    )
 
-<span class="c-comment"># Transaction lookup</span>
-<span class="c-func">curl</span> https://satsapi.dev/v1/tx/<span class="c-var">TXID_HERE</span>
+<span class="c-var">data</span> = <span class="c-var">r</span>.<span class="c-func">json</span>()
+<span class="c-func">print</span>(<span class="c-var">data</span>[<span class="c-string">'data'</span>][<span class="c-string">'signal'</span>])      <span class="c-comment"># "HOLD"</span>
+<span class="c-func">print</span>(<span class="c-var">data</span>[<span class="c-string">'data'</span>][<span class="c-string">'confluence'</span>])  <span class="c-comment"># 52</span></div>
 
-<span class="c-comment"># Response: HTTP 402 + Lightning invoice in WWW-Authenticate header</span>
-<span class="c-comment"># Pay invoice → repeat request → receive JSON</span></div>
-  <div class="code-block" id="tab-bot"><span class="c-comment">// LangChain / AutoGPT tool definition</span>
-<span class="c-keyword">const</span> <span class="c-var">tool</span> = {
-  name: <span class="c-string">"bitcoin_market_intelligence"</span>,
-  description: <span class="c-string">"BTC signal, price levels, risk matrix. Returns bot_ready object."</span>,
-  <span class="c-keyword">async</span> <span class="c-func">call</span>() {
-    <span class="c-keyword">const</span> <span class="c-var">data</span> = <span class="c-keyword">await</span> <span class="c-func">satsApiCall</span>(<span class="c-string">"/v1/summary"</span>);
-    <span class="c-keyword">return</span> <span class="c-var">data</span>.bot_ready;
+  <div class="code-block" id="tab-curl"><span class="c-comment"># Step 1 — initial request returns 402 + invoice</span>
+curl -s https://satsapi.dev/v1/price
+
+<span class="c-comment"># Response body contains:</span>
+<span class="c-comment"># { "invoice": "lnbc30n1p...", "payment_hash": "abc123...", "amount_sats": 3 }</span>
+
+<span class="c-comment"># Step 2 — pay the invoice with any Lightning wallet</span>
+<span class="c-comment"># (Phoenix, Breez, lncli, etc.)</span>
+
+<span class="c-comment"># Step 3 — resend with payment_hash as proof</span>
+curl -s "https://satsapi.dev/v1/price?payment_hash=abc123..." | jq .data
+
+<span class="c-comment"># With lnget CLI (handles 402 automatically):</span>
+lnget https://satsapi.dev/v1/signal | jq .data.signal</div>
+
+  <div class="code-block" id="tab-bot"><span class="c-comment">// LangChain Tool — autonomous L402 payment loop</span>
+<span class="c-keyword">class</span> <span class="c-func">BitcoinSignalTool</span> {
+  name = <span class="c-string">"bitcoin_market_intelligence"</span>;
+  description = <span class="c-string">"BTC market signal (BUY/SELL/HOLD), price levels, risk matrix."</span>;
+
+  <span class="c-keyword">async</span> <span class="c-func">_call</span>() {
+    <span class="c-keyword">let</span> <span class="c-var">res</span> = <span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">'https://satsapi.dev/v1/summary'</span>);
+
+    <span class="c-keyword">if</span> (<span class="c-var">res</span>.status === <span class="c-num2">402</span>) {
+      <span class="c-keyword">const</span> { invoice, payment_hash } = <span class="c-keyword">await</span> <span class="c-var">res</span>.<span class="c-func">json</span>();
+      <span class="c-keyword">await</span> <span class="c-var">this</span>.wallet.<span class="c-func">pay</span>(<span class="c-var">invoice</span>); <span class="c-comment">// agent pays autonomously</span>
+      <span class="c-var">res</span> = <span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">`https://satsapi.dev/v1/summary?payment_hash=<span class="c-var">${payment_hash}</span>`</span>);
+    }
+
+    <span class="c-keyword">const</span> { bot_ready } = (<span class="c-keyword">await</span> <span class="c-var">res</span>.<span class="c-func">json</span>()).data;
+    <span class="c-keyword">return</span> JSON.<span class="c-func">stringify</span>(<span class="c-var">bot_ready</span>);
     <span class="c-comment">// { signal:"HOLD", confluence:52, market_score:59,</span>
-    <span class="c-comment">//   price_usd:84200, fear_greed:28, support:79400 }</span>
+    <span class="c-comment">//   price_usd:84200, fear_greed:28, support:79400,</span>
+    <span class="c-comment">//   resistance:91200, leverage_risk:"LOW" }</span>
   }
-};
-<span class="c-comment">// Pays automatically via L402 — no human needed</span>
+}
 <span class="c-comment">// Compatible with: lnget · Aperture · LNC · WebLN</span></div>
 </section>
 
@@ -570,9 +596,9 @@
   <h2>How <span>L402</span> works.</h2>
   <p class="section-desc">The Lightning Network 402 protocol enables pay-per-call APIs without accounts, cards or subscriptions.</p>
   <div class="steps-grid">
-    <div class="step-card"><div class="step-num"></div><div class="step-title">Make the request</div><div class="step-desc">Call any endpoint like a standard REST API. The server responds with HTTP 402 and a Lightning invoice in the header.</div></div>
-    <div class="step-card"><div class="step-num"></div><div class="step-title">Pay the invoice</div><div class="step-desc">Your Lightning wallet (or agent) pays the invoice in milliseconds. No redirects. No waiting. No account needed.</div></div>
-    <div class="step-card"><div class="step-num"></div><div class="step-title">Receive the data</div><div class="step-desc">The server verifies payment and returns the full JSON response. The entire cycle takes under one second.</div></div>
+    <div class="step-card"><div class="step-num"></div><div class="step-title">Make the request</div><div class="step-desc">Call any endpoint like a standard REST API. The server responds with HTTP 402 and a Lightning invoice in the response body.</div></div>
+    <div class="step-card"><div class="step-num"></div><div class="step-title">Pay the invoice</div><div class="step-desc">Your Lightning wallet or agent pays the invoice in milliseconds. No redirects. No waiting. No account needed.</div></div>
+    <div class="step-card"><div class="step-num"></div><div class="step-title">Receive the data</div><div class="step-desc">Resend the request with the payment_hash as proof. The server verifies and returns the full JSON response.</div></div>
     <div class="step-card"><div class="step-num"></div><div class="step-title">Bots pay automatically</div><div class="step-desc">AI agents using lnget or WebLN complete the payment loop without human intervention. True autonomous API consumption.</div></div>
   </div>
 </section>
@@ -632,11 +658,26 @@
     </div>
   </div>
   <div class="calc-box">
-    <div class="calc-row"><span class="calc-label">1,000 calls/day · avg 55 sats/call</span><span class="calc-val">55,000 sats/day</span></div>
-    <div class="calc-row"><span class="calc-label">BTC at <span id="calc-btc-price">$—</span></span><span class="calc-val" id="calc-usd-day">≈ $— / day</span></div>
-    <div class="calc-row"><span class="calc-label">Monthly revenue estimate</span><span class="calc-val" id="calc-usd-month">≈ $— / month</span></div>
-    <div class="calc-row"><span class="calc-label">Hosting cost (Railway + DigitalOcean)</span><span class="calc-val">−$11 / month</span></div>
-    <div class="calc-row"><span class="calc-label">Net at 1,000 calls/day</span><span class="calc-val" id="calc-net">≈ $— / month in BTC</span></div>
+    <div class="calc-row">
+      <span class="calc-label">1,000 calls/day · avg 55 sats/call</span>
+      <span class="calc-val">55,000 sats/day</span>
+    </div>
+    <div class="calc-row">
+      <span class="calc-label">BTC at <span id="calc-btc-price">$—</span></span>
+      <span class="calc-val" id="calc-usd-day">≈ $— / day</span>
+    </div>
+    <div class="calc-row">
+      <span class="calc-label">Monthly revenue estimate</span>
+      <span class="calc-val" id="calc-usd-month">≈ $— / month</span>
+    </div>
+    <div class="calc-row">
+      <span class="calc-label">Hosting cost (Railway + DigitalOcean)</span>
+      <span class="calc-val">−$11 / month</span>
+    </div>
+    <div class="calc-row">
+      <span class="calc-label">Net at 1,000 calls/day</span>
+      <span class="calc-val" id="calc-net">≈ $— / month in BTC</span>
+    </div>
   </div>
 </section>
 
@@ -649,7 +690,7 @@
   </div>
   <ul class="footer-links">
     <li><a href="#endpoints">Endpoints</a></li>
-    <li><a href="/docs">Docs</a></li>
+    <li><a href="/docs.html">Docs</a></li>
     <li><a href="#pricing">Pricing</a></li>
     <li><a href="https://github.com/Aperezvigoa/satsapi" target="_blank">GitHub</a></li>
   </ul>
@@ -657,32 +698,47 @@
 
 <script>
 const API = 'https://satsapi.dev';
-const costs = {price:3,mempool:2,tx:2,onchain:15,derivatives:15,news:50,signal:150,summary:200};
-const eursPerSat = 0.00082;
+const SAT_COSTS = {price:3, mempool:2, tx:2, onchain:15, derivatives:15, news:50, signal:150, summary:200};
+const EUR_PER_SAT = 0.00082;
 
+// ─── Syntax highlight ───────────────────────────────────────────────────────
 function syntaxHighlight(json) {
   const str = JSON.stringify(json, null, 2);
-  return str.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
-    if (/^"/.test(m)) return /:$/.test(m) ? `<span class="j-key">${m}</span>` : `<span class="j-str">${m}</span>`;
-    if (/true|false/.test(m)) return `<span class="j-bool">${m}</span>`;
-    if (/null/.test(m)) return `<span class="j-null">${m}</span>`;
-    return `<span class="j-num">${m}</span>`;
-  }).replace(/[{}\[\],]/g, m => `<span class="j-punc">${m}</span>`);
+  return str
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      if (/^"/.test(m)) return /:$/.test(m) ? `<span class="j-key">${m}</span>` : `<span class="j-str">${m}</span>`;
+      if (/true|false/.test(m)) return `<span class="j-bool">${m}</span>`;
+      if (/null/.test(m)) return `<span class="j-null">${m}</span>`;
+      return `<span class="j-num">${m}</span>`;
+    })
+    .replace(/[{}\[\],]/g, m => `<span class="j-punc">${m}</span>`);
 }
 
+// ─── Demo panel ─────────────────────────────────────────────────────────────
 function updateCost() {
   const ep = document.getElementById('ep-select').value;
-  const sats = costs[ep];
-  document.getElementById('demo-cost').textContent = sats;
-  document.getElementById('demo-eur').textContent = `≈ ${(sats*eursPerSat).toFixed(3)}€`;
+  const costEl  = document.getElementById('demo-cost');
+  const unitEl  = document.getElementById('demo-unit');
+  const eurEl   = document.getElementById('demo-eur');
+  if (ep === 'price') {
+    costEl.textContent = 'FREE';
+    unitEl.textContent = 'demo';
+    eurEl.textContent  = '';
+  } else {
+    const sats = SAT_COSTS[ep];
+    costEl.textContent = sats;
+    unitEl.textContent = 'sats / call';
+    eurEl.textContent  = `≈ ${(sats * EUR_PER_SAT).toFixed(3)}€`;
+  }
 }
 
 async function runDemo() {
   const ep  = document.getElementById('ep-select').value;
   const box = document.getElementById('demo-response');
   box.innerHTML = '<span style="color:var(--amber)">// Fetching live data from satsapi.dev...</span>';
-  // price usa /v1/demo (gratis). El resto requiere pago — mostramos mensaje claro.
+
   if (ep === 'price') {
+    // /v1/demo es gratis — llamada directa a CryptoCompare, sin L402
     try {
       const res  = await fetch(`${API}/v1/demo`);
       const data = await res.json();
@@ -692,18 +748,25 @@ async function runDemo() {
       box.innerHTML = '<span style="color:var(--red)">// Error connecting to API — try again</span>';
     }
   } else {
-    const costs = {mempool:2,tx:2,onchain:15,derivatives:15,news:50,signal:150,summary:200};
-    const sats = costs[ep] || '?';
+    // Resto de endpoints requieren pago — mostramos cómo funciona
+    const sats = SAT_COSTS[ep] || '?';
     box.style.color = 'var(--text)';
     box.innerHTML = syntaxHighlight({
-      message: `This endpoint costs ${sats} sats per call.`,
-      how_to_pay: 'Send request → receive 402 with Lightning invoice → pay → resend with ?payment_hash=',
-      docs: 'https://satsapi.dev/docs',
-      free_demo: 'Select GET /v1/price for a free live demo'
+      status: 402,
+      error: 'Payment Required',
+      amount_sats: sats,
+      message: `Pay ${sats} sats via Lightning to access this endpoint.`,
+      how_to_pay: [
+        '1. Send this request → receive HTTP 402 with invoice',
+        '2. Pay the BOLT11 invoice with any Lightning wallet',
+        `3. Resend: GET https://satsapi.dev/v1/${ep}?payment_hash=<hash>`
+      ],
+      docs: 'https://satsapi.dev/docs'
     });
   }
 }
 
+// ─── Code tabs ───────────────────────────────────────────────────────────────
 function showTab(id, e) {
   document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.code-block').forEach(b => b.classList.remove('active'));
@@ -711,51 +774,88 @@ function showTab(id, e) {
   e.target.classList.add('active');
 }
 
+// ─── Live ticker + calculator ────────────────────────────────────────────────
 async function fetchLiveData() {
+  // Precio y RSI — /v1/demo es gratis, datos reales de CryptoCompare
   try {
-    const [pR, mR, oR] = await Promise.allSettled([
-      fetch(`${API}/v1/price`), fetch(`${API}/v1/mempool`), fetch(`${API}/v1/onchain`)
-    ]);
-    if (pR.status === 'fulfilled') {
-      const d = await pR.value.json(), p = d.data;
-      const price = '$' + parseFloat(p.price).toLocaleString('en-US',{maximumFractionDigits:0});
-      const chg = parseFloat(p.change_24h), cls = chg > 0 ? 'ticker-up' : 'ticker-down';
-      const sign = chg > 0 ? '+' : '';
+    const demoRes = await fetch(`${API}/v1/demo`);
+    if (demoRes.ok) {
+      const d = await demoRes.json();
+      const p = d.data;
+      const priceNum = parseFloat(p.price);
+      const price    = '$' + priceNum.toLocaleString('en-US', {maximumFractionDigits:0});
+      const chg      = parseFloat(p.change_24h);
+      const cls      = chg > 0 ? 'ticker-up' : 'ticker-down';
+      const sign     = chg > 0 ? '+' : '';
+
       ['t-price','t-price2'].forEach(id => {
         document.getElementById(id).innerHTML = `${price} <span class="${cls}">(${sign}${p.change_24h})</span>`;
       });
       document.getElementById('stat-price').textContent = price;
-      // Actualizar calculadora con precio real
-      const btcNum = parseFloat(p.price);
-      if (btcNum) {
-        const perDay   = (55000 * btcNum / 1e8).toFixed(2);
+
+      const rCls = p.rsi_14 < 35 ? 'ticker-down' : p.rsi_14 > 65 ? 'ticker-up' : 'ticker-val';
+      ['t-rsi','t-rsi2'].forEach(id => {
+        document.getElementById(id).innerHTML = `<span class="${rCls}">${p.rsi_14}</span>`;
+      });
+
+      const tCls = p.trend === 'BULLISH' ? 'ticker-up' : p.trend === 'BEARISH' ? 'ticker-down' : 'ticker-val';
+      ['t-trend','t-trend2'].forEach(id => {
+        document.getElementById(id).innerHTML = `<span class="${tCls}">${p.trend}</span>`;
+      });
+
+      // Calculadora dinámica
+      if (priceNum) {
+        const perDay   = (55000 * priceNum / 1e8).toFixed(2);
         const perMonth = (perDay * 30).toFixed(0);
         const net      = (perMonth - 11).toFixed(0);
-        const el = document.getElementById('calc-btc-price');
-        if (el) el.textContent = '$' + Math.round(btcNum).toLocaleString();
-        const d = document.getElementById('calc-usd-day');   if (d) d.textContent = `≈ $${perDay} / day`;
-        const m = document.getElementById('calc-usd-month'); if (m) m.textContent = `≈ $${perMonth} / month`;
-        const n = document.getElementById('calc-net');       if (n) n.textContent = `≈ $${net} / month in BTC`;
+        const elP = document.getElementById('calc-btc-price');
+        const elD = document.getElementById('calc-usd-day');
+        const elM = document.getElementById('calc-usd-month');
+        const elN = document.getElementById('calc-net');
+        if (elP) elP.textContent = '$' + Math.round(priceNum).toLocaleString();
+        if (elD) elD.textContent = `≈ $${perDay} / day`;
+        if (elM) elM.textContent = `≈ $${perMonth} / month`;
+        if (elN) elN.textContent = `≈ $${net} / month in BTC`;
       }
-      const rCls = p.rsi_14 < 35 ? 'ticker-down' : p.rsi_14 > 65 ? 'ticker-up' : 'ticker-val';
-      ['t-rsi','t-rsi2'].forEach(id => { document.getElementById(id).innerHTML = `<span class="${rCls}">${p.rsi_14}</span>`; });
-      const tCls = p.trend === 'BULLISH' ? 'ticker-up' : p.trend === 'BEARISH' ? 'ticker-down' : 'ticker-val';
-      ['t-trend','t-trend2'].forEach(id => { document.getElementById(id).innerHTML = `<span class="${tCls}">${p.trend}</span>`; });
     }
-    if (mR.status === 'fulfilled') {
-      const d = await mR.value.json(), p = d.data;
-      ['t-mempool','t-mempool2'].forEach(id => document.getElementById(id).textContent = `Fast: ${p.fees.fast_10min}`);
-      ['t-block','t-block2'].forEach(id => document.getElementById(id).textContent = `#${p.last_block.height.toLocaleString()}`);
+  } catch(e) {}
+
+  // Fees y bloque — mempool.space directamente (gratis, sin L402)
+  try {
+    const [feesRes, blocksRes] = await Promise.all([
+      fetch('https://mempool.space/api/v1/fees/recommended'),
+      fetch('https://mempool.space/api/v1/blocks')
+    ]);
+    if (feesRes.ok) {
+      const fees = await feesRes.json();
+      ['t-mempool','t-mempool2'].forEach(id => {
+        document.getElementById(id).textContent = `Fast: ${fees.fastestFee} sat/vB`;
+      });
     }
-    if (oR.status === 'fulfilled') {
-      const d = await oR.value.json(), p = d.data;
-      const val = p.fear_and_greed.value, lbl = p.fear_and_greed.label;
-      const cls = val < 35 ? 'ticker-down' : val > 65 ? 'ticker-up' : 'ticker-val';
-      ['t-fng','t-fng2'].forEach(id => { document.getElementById(id).innerHTML = `<span class="${cls}">${val} — ${lbl}</span>`; });
+    if (blocksRes.ok) {
+      const blocks = await blocksRes.json();
+      ['t-block','t-block2'].forEach(id => {
+        document.getElementById(id).textContent = `#${blocks[0].height.toLocaleString()}`;
+      });
+    }
+  } catch(e) {}
+
+  // Fear & Greed — Alternative.me directamente (gratis, sin L402)
+  try {
+    const fngRes = await fetch('https://api.alternative.me/fng/?limit=1');
+    if (fngRes.ok) {
+      const fng = await fngRes.json();
+      const val = parseInt(fng.data[0].value);
+      const lbl = fng.data[0].value_classification;
       document.getElementById('stat-fng').textContent = val;
+      const cls = val < 35 ? 'ticker-down' : val > 65 ? 'ticker-up' : 'ticker-val';
+      ['t-fng','t-fng2'].forEach(id => {
+        document.getElementById(id).innerHTML = `<span class="${cls}">${val} — ${lbl}</span>`;
+      });
     }
   } catch(e) {}
 }
+
 fetchLiveData();
 setInterval(fetchLiveData, 60000);
 </script>
