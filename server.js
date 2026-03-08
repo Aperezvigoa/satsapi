@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const axios = require('axios');
 const rateLimit = require('express-rate-limit');
 const app = express();
 app.set('trust proxy', 1); 
@@ -91,6 +92,31 @@ app.use('/v1/derivatives', standardLimiter, require('./routes/derivatives'));
 
 // Most expensive — everything combined
 app.use('/v1/summary',     summaryLimiter,  require('./routes/summary'));
+
+// ─────────────────────────────────────────
+// HEALTH — público, sin pago, sin rate limit
+// ─────────────────────────────────────────
+app.get('/health', async (req, res) => {
+  try {
+    const info = await axios.get(`${process.env.PHOENIXD_URL || 'http://localhost:9740'}/getinfo`, {
+      auth: { username: '', password: process.env.PHOENIXD_PASSWORD || '' },
+      timeout: 3000
+    });
+    const ch = info.data.channels?.[0];
+    res.json({
+      status: 'ok',
+      node: {
+        state:       ch?.state || 'NO_CHANNEL',
+        balance_sat: ch?.balanceSat || 0,
+        inbound_sat: ch?.inboundLiquiditySat || 0,
+        block:       info.data.blockHeight
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (e) {
+    res.status(503).json({ status: 'error', message: 'Node unreachable' });
+  }
+});
 
 // ─────────────────────────────────────────
 // ROOT — what bots and developers see first
