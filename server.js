@@ -7,8 +7,6 @@ app.set('trust proxy', 1);
 const cors = require('cors');
 app.use(cors());
 
-app.use('/v1/demo', demoLimiter, require('./routes/demo'));
-
 const l402 = require('./middleware/l402');
 app.use(l402);
 
@@ -31,6 +29,8 @@ const demoLimiter = rateLimit({
     docs: 'https://satsapi.dev/docs'
   }
 });
+
+app.use('/v1/demo', demoLimiter, require('./routes/demo'));
 
 // Standard endpoints — 60 calls per minute per IP
 const standardLimiter = rateLimit({
