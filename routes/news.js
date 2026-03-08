@@ -6,10 +6,22 @@ const axios = require('axios');
 let cache = { summary: null, timestamp: null };
 const CACHE_HOURS = 6;
 
+function parseRSSTitles(xml) {
+  const titles = [];
+  const regex = /<item>[\s\S]*?<title><!\[CDATA\[(.*?)\]\]><\/title>|<item>[\s\S]*?<title>(.*?)<\/title>/g;
+  let match;
+  while ((match = regex.exec(xml)) !== null && titles.length < 10) {
+    const title = (match[1] || match[2] || '').trim();
+    if (title) titles.push(title);
+  }
+  return titles;
+}
+
 router.get('/', async (req, res) => {
   try {
-    // Return cached version if less than 6 hours old
     const now = new Date();
+
+    // Return cached version if less than 6 hours old
     if (cache.summary && cache.timestamp) {
       const hoursSince = (now - cache.timestamp) / 1000 / 3600;
       if (hoursSince < CACHE_HOURS) {
@@ -23,27 +35,19 @@ router.get('/', async (req, res) => {
       }
     }
 
-    // Fetch latest crypto headlines from CryptoCompare (free, no key needed)
-    const newsRes = await axios.get(
-      'https://min-api.cryptocompare.com/data/v2/news/?lang=EN&categories=BTC&sortOrder=popular'
+    // Fetch RSS from CoinDesk (accessible from cloud servers)
+    const rssRes = await axios.get(
+      'https://feeds.feedburner.com/CoinDesk',
+      { timeout: 10000, headers: { 'User-Agent': 'Mozilla/5.0' } }
     );
 
-    // CryptoCompare v2 returns data.Data (array) — handle both old and new structure
-    const rawData = newsRes.data?.Data;
-    let articles = [];
-    if (Array.isArray(rawData)) {
-      articles = rawData.slice(0, 10);
-    } else if (rawData?.Data && Array.isArray(rawData.Data)) {
-      articles = rawData.Data.slice(0, 10);
-    } else {
-      throw new Error('Unexpected news API response structure');
+    const titles = parseRSSTitles(rssRes.data);
+
+    if (titles.length === 0) {
+      throw new Error('No articles found in RSS feed');
     }
 
-    if (articles.length === 0) {
-      throw new Error('No articles returned from news API');
-    }
-
-    const headlines = articles.map((a, i) => `${i + 1}. ${a.title}`).join('\n');
+    const headlines = titles.map((t, i) => `${i + 1}. ${t}`).join('\n');
 
     // Ask Claude to summarize and analyze
     const aiRes = await axios.post(
@@ -59,7 +63,7 @@ router.get('/', async (req, res) => {
   "score": 0.0 to 1.0,
   "summary": "2 sentence max summary of the most important developments",
   "top_events": ["event 1", "event 2", "event 3"],
-  "sources_analyzed": 10
+  "sources_analyzed": ${titles.length}
 }
 
 Headlines:
@@ -75,12 +79,10 @@ ${headlines}`
       }
     );
 
-    // Parse AI response
     const rawText = aiRes.data.content[0].text;
     const clean   = rawText.replace(/```json|```/g, '').trim();
     const parsed  = JSON.parse(clean);
 
-    // Save to cache
     cache = { summary: parsed, timestamp: now };
 
     res.json({
