@@ -1,771 +1,1386 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="SatsAPI — Bitcoin market intelligence API. Pay per call in satoshis via Lightning Network. No subscriptions. No registration. 8 endpoints covering price, mempool, on-chain data, derivatives, AI signals and more.">
-<meta property="og:title" content="SatsAPI — Bitcoin Intelligence, Pay Per Call">
-<meta property="og:description" content="8 endpoints. Real data. Pay in satoshis. No subscriptions.">
-<title>SatsAPI — Bitcoin Intelligence API</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;700&family=Barlow:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg:#060608; --surface:#0d0d10; --surface2:#141418;
-    --border:#1e1e24; --border2:#2a2a33;
-    --amber:#f59e0b; --amber-dim:#f59e0b22; --amber-glow:#f59e0b0a;
-    --text:#e2e0d8; --muted:#6b6a72; --muted2:#4a4952;
-    --green:#34d399; --red:#f87171; --blue:#60a5fa; --purple:#a78bfa;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- PRIMARY SEO -->
+  <title>SatsAPI — Bitcoin Intelligence API. Pay Per Request with Lightning.</title>
+  <meta name="description" content="Bitcoin market data API with no subscriptions and no API keys. Pay per request with Lightning Network using the L402 protocol. Price, RSI, Fear & Greed, on-chain metrics, AI signals — starting at 2 sats.">
+  <meta name="keywords" content="bitcoin api, lightning network api, L402, pay per request api, bitcoin price api, bitcoin signal api, on-chain data api, lightning micropayments, AI agent bitcoin">
+  <meta name="author" content="SatsAPI">
+  <link rel="canonical" href="https://satsapi.dev/">
+
+  <!-- OPEN GRAPH -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://satsapi.dev/">
+  <meta property="og:title" content="SatsAPI — Bitcoin Intelligence API. Pay Per Request.">
+  <meta property="og:description" content="No subscriptions. No API keys. Pay per request with Lightning Network. Bitcoin price, RSI, Fear & Greed, AI signals starting at 2 sats.">
+  <meta property="og:image" content="https://satsapi.dev/og.png">
+
+  <!-- TWITTER -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SatsAPI — Bitcoin Intelligence API">
+  <meta name="twitter:description" content="Pay per request with Lightning. No subscriptions. No API keys. Bitcoin data from 2 sats.">
+
+  <!-- SCHEMA.ORG -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "SatsAPI",
+    "applicationCategory": "DeveloperApplication",
+    "description": "Bitcoin market data API powered by the L402 protocol. Pay per request with Lightning Network. No subscriptions, no API keys.",
+    "url": "https://satsapi.dev",
+    "offers": {
+      "@type": "Offer",
+      "price": "0.00002",
+      "priceCurrency": "USD",
+      "description": "Pay per request starting at 2 satoshis via Lightning Network"
+    },
+    "featureList": [
+      "Bitcoin price and RSI",
+      "Mempool fee estimates",
+      "Fear and Greed Index",
+      "On-chain metrics",
+      "Derivatives data",
+      "AI-powered trading signals",
+      "L402 Lightning payments",
+      "No API keys required"
+    ]
   }
-  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-  html { scroll-behavior:smooth; }
-  body { background:var(--bg); color:var(--text); font-family:'Barlow',sans-serif; overflow-x:hidden; }
-  body::after {
-    content:''; position:fixed; inset:0;
-    background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);
-    pointer-events:none; z-index:999;
-  }
+  </script>
 
-  /* NAV */
-  nav {
-    position:fixed; top:0; left:0; right:0; z-index:100;
-    display:flex; justify-content:space-between; align-items:center;
-    padding:1.2rem 3rem;
-    background:rgba(6,6,8,0.9); backdrop-filter:blur(12px);
-    border-bottom:1px solid var(--border);
-  }
-  .logo { font-family:'IBM Plex Mono',monospace; font-size:1rem; font-weight:700; color:var(--amber); letter-spacing:0.05em; display:flex; align-items:center; gap:0.6rem; }
-  .logo-dot { width:8px; height:8px; background:var(--amber); border-radius:50%; animation:pulse 2s ease-in-out infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.8)} }
-  .nav-links { display:flex; gap:2rem; list-style:none; align-items:center; }
-  .nav-links a { font-family:'IBM Plex Mono',monospace; font-size:0.72rem; color:var(--muted); text-decoration:none; text-transform:uppercase; letter-spacing:0.12em; transition:color 0.2s; }
-  .nav-links a:hover { color:var(--text); }
-  .nav-cta { color:var(--bg) !important; background:var(--amber); padding:0.5rem 1.2rem; transition:background 0.2s !important; }
-  .nav-cta:hover { background:#fbbf24 !important; }
-  .nav-toggle { display:none; background:none; border:none; cursor:pointer; padding:0.5rem; }
-  .nav-toggle svg { width:22px; height:22px; stroke:var(--text); stroke-width:2; fill:none; }
-  @media (max-width:768px) {
-    nav { padding:1rem 1.5rem; }
-    .nav-toggle { display:block; }
-    .nav-links { display:none; position:fixed; top:60px; left:0; right:0; background:rgba(6,6,8,0.98); border-bottom:1px solid var(--border); flex-direction:column; gap:0; padding:1rem 0; }
-    .nav-links.open { display:flex; }
-    .nav-links li { width:100%; }
-    .nav-links a { display:block; padding:0.9rem 1.5rem; border-bottom:1px solid var(--border); }
-    .nav-cta { margin:1rem 1.5rem; display:block; text-align:center; }
-  }
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Barlow:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 
-  /* HERO */
-  .hero { min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:8rem 3rem 5rem; position:relative; overflow:hidden; }
-  .hero-grid { position:absolute; inset:0; background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px); background-size:48px 48px; opacity:0.4; mask-image:radial-gradient(ellipse 70% 80% at 20% 50%,black 20%,transparent 80%); }
-  .hero-glow { position:absolute; width:800px; height:600px; background:radial-gradient(ellipse,#f59e0b08 0%,transparent 65%); top:50%; left:-10%; transform:translateY(-50%); pointer-events:none; }
-  .hero-content { position:relative; z-index:10; max-width:760px; }
-  .hero-tag { display:inline-flex; align-items:center; gap:0.75rem; font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color:var(--amber); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:2rem; opacity:0; animation:fadeUp 0.7s ease 0.1s forwards; }
-  .hero-tag::before { content:''; width:32px; height:1px; background:var(--amber); }
-  h1 { font-size:clamp(2.8rem,8vw,8rem); font-weight:900; line-height:0.92; letter-spacing:-0.04em; margin-bottom:2rem; opacity:0; animation:fadeUp 0.7s ease 0.25s forwards; }
-  h1 em { font-style:normal; color:var(--amber); position:relative; }
-  h1 em::after { content:''; position:absolute; bottom:4px; left:0; right:0; height:3px; background:var(--amber); opacity:0.4; }
-  .hero-sub { font-size:clamp(1rem,2.5vw,1.25rem); font-weight:300; color:var(--muted); max-width:560px; line-height:1.7; margin-bottom:3rem; opacity:0; animation:fadeUp 0.7s ease 0.4s forwards; }
-  .hero-sub strong { color:var(--text); font-weight:600; }
-  .hero-actions { display:flex; gap:1rem; align-items:center; flex-wrap:wrap; opacity:0; animation:fadeUp 0.7s ease 0.55s forwards; }
-  .btn-primary { font-family:'IBM Plex Mono',monospace; font-size:0.82rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--bg); background:var(--amber); border:none; padding:1rem 2.5rem; cursor:pointer; transition:all 0.2s; clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%); text-decoration:none; display:inline-block; }
-  .btn-primary:hover { background:#fbbf24; transform:translateY(-2px); box-shadow:0 12px 40px #f59e0b33; }
-  .btn-ghost { font-family:'IBM Plex Mono',monospace; font-size:0.82rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); background:transparent; border:1px solid var(--border2); padding:1rem 2.5rem; cursor:pointer; transition:all 0.2s; text-decoration:none; display:inline-block; }
-  .btn-ghost:hover { color:var(--text); border-color:var(--muted); }
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* HERO STATS */
-  .hero-stats { position:absolute; right:3rem; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:2rem; z-index:10; opacity:0; animation:fadeLeft 0.7s ease 0.7s forwards; }
-  @keyframes fadeLeft { from{opacity:0;transform:translateY(-50%) translateX(20px)} to{opacity:1;transform:translateY(-50%) translateX(0)} }
-  .hero-stat { text-align:right; border-right:2px solid var(--border2); padding-right:1.5rem; }
-  .hero-stat-val { font-family:'IBM Plex Mono',monospace; font-size:1.6rem; font-weight:700; color:var(--amber); line-height:1; }
-  .hero-stat-label { font-family:'IBM Plex Mono',monospace; font-size:0.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.12em; margin-top:0.3rem; }
-  @media (max-width:900px) { .hero { padding:7rem 1.5rem 4rem; } .hero-stats { display:none; } }
+    :root {
+      --bg: #080809;
+      --surface: #0f0f11;
+      --surface-2: #161618;
+      --border: #1e1e21;
+      --border-2: #2a2a2e;
+      --ink: #f0f0ee;
+      --ink-2: #8a8a90;
+      --ink-3: #45454a;
+      --orange: #f7931a;
+      --orange-dim: rgba(247,147,26,0.12);
+      --orange-glow: rgba(247,147,26,0.06);
+      --green: #00d37f;
+      --green-dim: rgba(0,211,127,0.1);
+      --red: #ff4d4d;
+      --mono: 'JetBrains Mono', monospace;
+      --cond: 'Barlow Condensed', sans-serif;
+      --body: 'Barlow', sans-serif;
+    }
 
-  /* TICKER */
-  .ticker-bar { position:absolute; bottom:0; left:0; right:0; border-top:1px solid var(--border); background:var(--surface); overflow:hidden; opacity:0; animation:fadeUp 0.7s ease 0.9s forwards; }
-  .ticker-inner { display:flex; gap:5rem; padding:0.75rem 0; animation:tickerScroll 40s linear infinite; width:max-content; }
-  @keyframes tickerScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-  .ticker-item { font-family:'IBM Plex Mono',monospace; font-size:0.7rem; white-space:nowrap; display:flex; gap:0.75rem; color:var(--muted); }
-  .ticker-label{color:var(--muted2)} .ticker-val{color:var(--text)}
-  .ticker-up{color:var(--green)} .ticker-down{color:var(--red)}
-  @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+    html { font-size: 16px; scroll-behavior: smooth; }
 
-  /* SECTIONS */
-  section { padding:5rem 3rem; max-width:1200px; margin:0 auto; }
-  @media (max-width:768px) { section { padding:4rem 1.5rem; } }
-  .section-label { font-family:'IBM Plex Mono',monospace; font-size:0.68rem; color:var(--amber); text-transform:uppercase; letter-spacing:0.2em; margin-bottom:1rem; display:flex; align-items:center; gap:0.75rem; }
-  .section-label::before { content:''; width:24px; height:1px; background:var(--amber); }
-  h2 { font-size:clamp(1.8rem,4vw,4rem); font-weight:900; letter-spacing:-0.03em; line-height:1.05; margin-bottom:1rem; }
-  h2 span { color:var(--amber); }
-  .section-desc { font-size:1.05rem; color:var(--muted); max-width:520px; line-height:1.7; font-weight:300; margin-bottom:3.5rem; }
-  .divider { width:100%; height:1px; background:linear-gradient(90deg,transparent,var(--border2),transparent); }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--body);
+      font-weight: 300;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
 
-  /* ENDPOINTS */
-  #endpoints { max-width:100%; padding:5rem 3rem; }
-  @media (max-width:768px) { #endpoints { padding:4rem 1.5rem; } }
-  .endpoints-header { max-width:1200px; margin:0 auto 3rem; }
-  .endpoints-grid { max-width:1200px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); border:1px solid var(--border); }
-  @media (max-width:1000px) { .endpoints-grid { grid-template-columns:repeat(2,1fr); } }
-  @media (max-width:560px) { .endpoints-grid { grid-template-columns:1fr; } }
-  .ep-card { background:var(--bg); padding:2rem; transition:background 0.2s; position:relative; overflow:hidden; }
-  .ep-card::after { content:''; position:absolute; inset:0; background:radial-gradient(circle at 50% 0%,var(--amber-glow),transparent 60%); opacity:0; transition:opacity 0.3s; }
-  .ep-card:hover { background:var(--surface); }
-  .ep-card:hover::after { opacity:1; }
-  .ep-icon { width:28px; height:28px; margin-bottom:1rem; color:var(--amber); opacity:0.7; }
-  .ep-method { font-family:'IBM Plex Mono',monospace; font-size:0.6rem; background:var(--amber-dim); color:var(--amber); padding:0.2rem 0.6rem; display:inline-block; margin-bottom:1rem; letter-spacing:0.1em; text-transform:uppercase; }
-  .ep-path { font-family:'IBM Plex Mono',monospace; font-size:0.9rem; color:var(--text); margin-bottom:0.75rem; font-weight:500; }
-  .ep-desc { font-size:0.82rem; color:var(--muted); line-height:1.65; margin-bottom:1.5rem; font-weight:300; }
-  .ep-tags { display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:1.5rem; }
-  .ep-tag { font-family:'IBM Plex Mono',monospace; font-size:0.58rem; color:var(--muted); border:1px solid var(--border2); padding:0.15rem 0.5rem; text-transform:uppercase; letter-spacing:0.08em; }
-  .ep-footer { display:flex; justify-content:space-between; align-items:center; padding-top:1rem; border-top:1px solid var(--border); }
-  .ep-cost { font-family:'IBM Plex Mono',monospace; font-size:1rem; font-weight:700; color:var(--amber); }
-  .ep-rate { font-family:'IBM Plex Mono',monospace; font-size:0.6rem; color:var(--muted2); text-transform:uppercase; }
+    /* Grain texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0.4;
+    }
 
-  /* DEMO */
-  .demo-layout { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); border:1px solid var(--border); margin-top:3rem; }
-  @media (max-width:700px) { .demo-layout { grid-template-columns:1fr; } }
-  .demo-panel { background:var(--bg); padding:2rem; }
-  @media (max-width:480px) { .demo-panel { padding:1.25rem; } }
-  .demo-panel-label { font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:var(--muted2); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:1.25rem; display:flex; align-items:center; gap:0.5rem; }
-  .live-dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 1.5s ease-in-out infinite; }
-  select { width:100%; background:var(--surface2); border:1px solid var(--border2); color:var(--text); padding:0.8rem 1rem; font-family:'IBM Plex Mono',monospace; font-size:0.78rem; outline:none; appearance:none; cursor:pointer; transition:border-color 0.2s; margin-bottom:1rem; }
-  select:focus { border-color:var(--amber); }
-  .cost-display { display:flex; align-items:baseline; gap:0.5rem; margin-bottom:1.5rem; }
-  .cost-num { font-family:'IBM Plex Mono',monospace; font-size:2rem; font-weight:700; color:var(--amber); line-height:1; }
-  .cost-unit { font-family:'IBM Plex Mono',monospace; font-size:0.75rem; color:var(--muted); text-transform:uppercase; }
-  .cost-eur { font-family:'IBM Plex Mono',monospace; font-size:0.72rem; color:var(--muted2); margin-left:auto; }
-  .run-btn { width:100%; background:var(--amber); color:var(--bg); border:none; padding:1rem; font-family:'IBM Plex Mono',monospace; font-size:0.82rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; cursor:pointer; transition:all 0.2s; clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%); }
-  .run-btn:hover { background:#fbbf24; transform:translateY(-1px); }
-  .response-area { background:var(--surface); border:1px solid var(--border); padding:1.5rem; font-family:'IBM Plex Mono',monospace; font-size:0.72rem; line-height:1.9; min-height:280px; white-space:pre-wrap; overflow-y:auto; max-height:400px; }
-  .j-key{color:var(--blue)} .j-str{color:var(--green)} .j-num{color:var(--purple)}
-  .j-bool{color:var(--amber)} .j-null{color:var(--muted)} .j-punc{color:var(--muted2)}
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2.5rem;
+      height: 56px;
+      background: rgba(8,8,9,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
 
-  /* CODE TABS */
-  .code-tabs { display:flex; flex-wrap:wrap; gap:0; margin-bottom:0; border-bottom:1px solid var(--border); }
-  .code-tab { font-family:'IBM Plex Mono',monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); padding:0.75rem 1.5rem; cursor:pointer; border:none; background:var(--surface); border-right:1px solid var(--border); transition:all 0.2s; }
-  .code-tab.active { color:var(--amber); background:var(--bg); border-bottom:2px solid var(--amber); margin-bottom:-1px; }
-  .code-tab:hover:not(.active) { color:var(--text); }
-  .code-block { background:var(--surface); border:1px solid var(--border); border-top:none; padding:2rem; font-family:'IBM Plex Mono',monospace; font-size:0.78rem; line-height:1.9; white-space:pre; overflow-x:auto; display:none; }
-  @media (max-width:480px) { .code-block { padding:1.25rem; font-size:0.7rem; } }
-  .code-block.active { display:block; }
-  .c-comment{color:var(--muted2)} .c-keyword{color:var(--purple)} .c-string{color:var(--green)}
-  .c-func{color:var(--blue)} .c-var{color:var(--amber)} .c-num2{color:#f9a8d4}
+    .nav-logo {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-decoration: none;
+      color: var(--ink);
+      display: flex; align-items: center; gap: 0.6rem;
+    }
 
-  /* HOW IT WORKS */
-  .steps-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); border:1px solid var(--border); margin-top:3rem; counter-reset:step; }
-  @media (max-width:800px) { .steps-grid { grid-template-columns:repeat(2,1fr); } }
-  @media (max-width:480px) { .steps-grid { grid-template-columns:1fr; } }
-  .step-card { background:var(--bg); padding:2.5rem 2rem; counter-increment:step; position:relative; }
-  .step-num { font-family:'IBM Plex Mono',monospace; font-size:3.5rem; font-weight:700; color:var(--border2); line-height:1; margin-bottom:1.5rem; }
-  .step-num::before { content:counter(step,decimal-leading-zero); }
-  .step-title { font-size:1.05rem; font-weight:700; margin-bottom:0.75rem; }
-  .step-desc { font-size:0.85rem; color:var(--muted); line-height:1.7; font-weight:300; }
-  .step-card::after { content:''; position:absolute; top:0; left:0; width:100%; height:2px; background:var(--amber); transform:scaleX(0); transform-origin:left; transition:transform 0.4s ease; }
-  .step-card:hover::after { transform:scaleX(1); }
+    .nav-logo-dot {
+      width: 8px; height: 8px;
+      background: var(--orange);
+      border-radius: 50%;
+      animation: pulse-dot 2.5s ease infinite;
+    }
 
-  /* PRICING */
-  .pricing-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); border:1px solid var(--border); margin-top:3rem; }
-  @media (max-width:800px) { .pricing-grid { grid-template-columns:repeat(2,1fr); } }
-  @media (max-width:400px) { .pricing-grid { grid-template-columns:1fr; } }
-  .price-card { background:var(--bg); padding:2rem 1.5rem; text-align:center; transition:background 0.2s; }
-  .price-card:hover { background:var(--surface); }
-  .price-ep { font-family:'IBM Plex Mono',monospace; font-size:0.68rem; color:var(--muted2); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
-  .price-sats { font-family:'IBM Plex Mono',monospace; font-size:2.5rem; font-weight:700; color:var(--amber); line-height:1; }
-  .price-label { font-size:0.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-top:0.4rem; font-family:'IBM Plex Mono',monospace; }
-  .price-eur { font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color:var(--muted2); margin-top:0.5rem; }
+    @keyframes pulse-dot {
+      0%,100%{ box-shadow: 0 0 0 0 rgba(247,147,26,0.4); }
+      50%{ box-shadow: 0 0 0 6px rgba(247,147,26,0); }
+    }
 
-  /* COMPARISON TABLE */
-  .compare-box { margin-top:2rem; border:1px solid var(--border2); background:var(--surface); overflow:hidden; }
-  .compare-header { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; background:var(--surface2); border-bottom:1px solid var(--border); padding:0.75rem 1.5rem; font-family:'IBM Plex Mono',monospace; font-size:0.62rem; color:var(--muted2); text-transform:uppercase; letter-spacing:0.12em; }
-  .compare-row { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; padding:0.9rem 1.5rem; border-bottom:1px solid var(--border); font-family:'IBM Plex Mono',monospace; font-size:0.78rem; align-items:center; }
-  .compare-row:last-child { border-bottom:none; }
-  .compare-row:hover { background:var(--surface2); }
-  .compare-feature { color:var(--muted); }
-  .compare-yes { color:var(--green); text-align:center; }
-  .compare-no { color:var(--red); text-align:center; }
-  .compare-amber { color:var(--amber); text-align:center; font-weight:700; }
-  .compare-col { text-align:center; }
-  .compare-col-highlight { text-align:center; color:var(--amber); }
-  @media (max-width:600px) { .compare-header,.compare-row { grid-template-columns:1.5fr 1fr 1fr 1fr; font-size:0.65rem; padding:0.75rem 1rem; } }
+    .nav-center {
+      display: flex; gap: 0; 
+      border: 1px solid var(--border);
+    }
 
-  /* BOTS */
-  .bots-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); border:1px solid var(--border); margin-top:3rem; }
-  @media (max-width:600px) { .bots-grid { grid-template-columns:1fr; } }
-  .bot-card { background:var(--bg); padding:2.5rem 2rem; }
-  .bot-icon-wrap { width:32px; height:32px; margin-bottom:1.25rem; color:var(--amber); opacity:0.8; }
-  .bot-title { font-size:1.1rem; font-weight:700; margin-bottom:0.75rem; }
-  .bot-desc { font-size:0.85rem; color:var(--muted); line-height:1.7; font-weight:300; }
+    .nav-center a {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--ink-2);
+      text-decoration: none;
+      padding: 0.4rem 1rem;
+      border-right: 1px solid var(--border);
+      transition: color 0.15s, background 0.15s;
+      letter-spacing: 0.05em;
+    }
 
-  /* FOOTER */
-  footer { border-top:1px solid var(--border); padding:2.5rem 3rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.5rem; }
-  @media (max-width:600px) { footer { padding:2rem 1.5rem; flex-direction:column; align-items:flex-start; } }
-  .footer-left { font-family:'IBM Plex Mono',monospace; font-size:0.75rem; color:var(--muted); line-height:2; }
-  .footer-left strong { color:var(--amber); }
-  .footer-links { display:flex; gap:2rem; list-style:none; flex-wrap:wrap; }
-  .footer-links a { font-family:'IBM Plex Mono',monospace; font-size:0.68rem; color:var(--muted2); text-decoration:none; text-transform:uppercase; letter-spacing:0.1em; transition:color 0.2s; }
-  .footer-links a:hover { color:var(--amber); }
-</style>
+    .nav-center a:last-child { border-right: none; }
+    .nav-center a:hover { color: var(--ink); background: var(--surface); }
+
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+
+    .nav-price {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--ink-3);
+    }
+
+    .nav-price span { color: var(--orange); }
+
+    .btn-nav {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--bg);
+      background: var(--orange);
+      border: none;
+      padding: 0.45rem 1rem;
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      transition: opacity 0.15s;
+    }
+
+    .btn-nav:hover { opacity: 0.85; }
+
+    /* ── TICKER ── */
+    .ticker {
+      position: fixed; top: 56px; left: 0; right: 0; z-index: 199;
+      height: 32px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      display: flex; align-items: center;
+    }
+
+    .ticker-track {
+      display: flex; gap: 3rem;
+      animation: ticker 40s linear infinite;
+      width: max-content;
+      align-items: center;
+    }
+
+    .ticker-item {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--ink-3);
+      white-space: nowrap;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+
+    .ticker-item .tk-val { color: var(--ink-2); }
+    .ticker-item .tk-pos { color: var(--green); }
+    .ticker-item .tk-neg { color: var(--red); }
+    .ticker-sep { color: var(--border-2); }
+
+    @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      padding: 120px 2.5rem 5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      max-width: 1280px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* Ambient glow behind hero */
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 20%; left: -10%;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(247,147,26,0.04) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-left { position: relative; z-index: 1; }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--orange);
+      border: 1px solid rgba(247,147,26,0.25);
+      background: var(--orange-dim);
+      padding: 0.3rem 0.75rem;
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeUp 0.5s ease forwards 0.1s;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 5px; height: 5px;
+      background: var(--orange);
+      border-radius: 50%;
+    }
+
+    .hero-title {
+      font-family: var(--cond);
+      font-size: clamp(3.5rem, 6vw, 6rem);
+      font-weight: 800;
+      line-height: 0.95;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      color: var(--ink);
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.2s;
+    }
+
+    .hero-title .hl {
+      color: var(--orange);
+      display: block;
+    }
+
+    .hero-title .dim { color: var(--ink-3); }
+
+    .hero-sub {
+      margin-top: 1.8rem;
+      font-size: 1rem;
+      color: var(--ink-2);
+      max-width: 44ch;
+      line-height: 1.7;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.35s;
+    }
+
+    .hero-actions {
+      margin-top: 2.5rem;
+      display: flex; gap: 0.75rem; align-items: center;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.5s;
+    }
+
+    .btn-primary {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      font-weight: 500;
+      background: var(--orange);
+      color: var(--bg);
+      border: 1px solid var(--orange);
+      padding: 0.75rem 1.5rem;
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      transition: opacity 0.15s;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+    }
+
+    .btn-primary:hover { opacity: 0.85; }
+
+    .btn-secondary {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--ink-2);
+      border: 1px solid var(--border-2);
+      padding: 0.75rem 1.5rem;
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-secondary:hover { border-color: var(--ink-2); color: var(--ink); }
+
+    .hero-metrics {
+      margin-top: 3.5rem;
+      display: flex; gap: 2.5rem;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.65s;
+    }
+
+    .metric-val {
+      font-family: var(--cond);
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1;
+    }
+
+    .metric-val sub {
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--ink-2);
+      margin-left: 0.2rem;
+      vertical-align: baseline;
+    }
+
+    .metric-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-top: 0.3rem;
+    }
+
+    /* ── TERMINAL ── */
+    .hero-right {
+      opacity: 0;
+      animation: fadeUp 0.7s ease forwards 0.3s;
+    }
+
+    .terminal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .terminal::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(247,147,26,0.03) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .terminal-bar {
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      padding: 0.7rem 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+
+    .t-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .t-dot.r { background: #ff5f57; }
+    .t-dot.y { background: #febc2e; }
+    .t-dot.g { background: #28c840; }
+
+    .terminal-url {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--ink-3);
+    }
+
+    .terminal-body {
+      padding: 1.5rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      line-height: 1.8;
+      min-height: 380px;
+    }
+
+    .t-line { display: flex; align-items: flex-start; gap: 0.5rem; }
+    .t-prompt { color: var(--orange); user-select: none; }
+    .t-cmd { color: var(--ink); }
+    .t-out { color: var(--ink-2); padding-left: 1rem; }
+    .t-key { color: #7cc5f4; }
+    .t-str { color: #c3a6ff; }
+    .t-num { color: var(--green); }
+    .t-bool { color: var(--orange); }
+    .t-comment { color: var(--ink-3); }
+    .t-success { color: var(--green); }
+    .t-error { color: var(--red); }
+    .t-cursor {
+      display: inline-block;
+      width: 8px; height: 14px;
+      background: var(--orange);
+      vertical-align: middle;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    .t-line-hidden { display: none; }
+
+    /* ── SECTION BASE ── */
+    .section {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 5rem 2.5rem;
+    }
+
+    .section-header {
+      display: flex; align-items: baseline; gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .section-num {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--ink-3);
+      letter-spacing: 0.1em;
+    }
+
+    .section-title {
+      font-family: var(--cond);
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      color: var(--ink);
+    }
+
+    .section-title .hl { color: var(--orange); }
+
+    /* ── DIVIDER ── */
+    .divider { border: none; border-top: 1px solid var(--border); }
+
+    /* ── HOW IT WORKS ── */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .step {
+      background: var(--bg);
+      padding: 2.5rem;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .step:hover { background: var(--surface); }
+
+    .step-num {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--orange);
+      letter-spacing: 0.1em;
+      margin-bottom: 1.5rem;
+    }
+
+    .step-title {
+      font-family: var(--cond);
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--ink);
+      margin-bottom: 0.8rem;
+      letter-spacing: 0.03em;
+    }
+
+    .step-desc {
+      font-size: 0.88rem;
+      color: var(--ink-2);
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+
+    .step-code {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      line-height: 1.8;
+      color: var(--ink-2);
+    }
+
+    .sc-k { color: #7cc5f4; }
+    .sc-v { color: #c3a6ff; }
+    .sc-n { color: var(--green); }
+    .sc-c { color: var(--ink-3); }
+    .sc-s { color: var(--orange); }
+
+    /* ── ENDPOINTS ── */
+    .ep-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .ep-row {
+      background: var(--bg);
+      display: grid;
+      grid-template-columns: 260px 90px 1fr auto;
+      align-items: center;
+      gap: 2rem;
+      padding: 1.2rem 1.5rem;
+      transition: background 0.15s;
+    }
+
+    .ep-row:hover { background: var(--surface); }
+
+    .ep-row.header {
+      background: var(--surface-2);
+      padding: 0.7rem 1.5rem;
+    }
+
+    .ep-row.header span {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+
+    .ep-path {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--ink);
+    }
+
+    .ep-path .method {
+      color: var(--green);
+      margin-right: 0.5rem;
+    }
+
+    .ep-cost {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--orange);
+      background: var(--orange-dim);
+      border: 1px solid rgba(247,147,26,0.2);
+      padding: 0.2rem 0.5rem;
+      text-align: center;
+    }
+
+    .ep-desc {
+      font-size: 0.85rem;
+      color: var(--ink-2);
+    }
+
+    .ep-tag {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      border: 1px solid var(--border);
+      padding: 0.15rem 0.4rem;
+    }
+
+    .ep-tag.ai { color: var(--orange); border-color: rgba(247,147,26,0.2); }
+
+    /* ── DEMO ── */
+    .demo-wrap {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .demo-sidebar {
+      background: var(--surface);
+      padding: 1.5rem;
+    }
+
+    .demo-sidebar-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 1rem;
+    }
+
+    .demo-ep-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+
+    .demo-ep-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.6rem 0.8rem;
+      cursor: pointer;
+      transition: background 0.12s;
+      border: 1px solid transparent;
+    }
+
+    .demo-ep-item:hover { background: var(--surface-2); border-color: var(--border); }
+    .demo-ep-item.active { background: var(--orange-dim); border-color: rgba(247,147,26,0.3); }
+
+    .demo-ep-path { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-2); }
+    .demo-ep-item.active .demo-ep-path { color: var(--ink); }
+    .demo-ep-cost { font-family: var(--mono); font-size: 0.65rem; color: var(--orange); }
+
+    .demo-output-wrap { background: var(--bg); padding: 1.5rem; display: flex; flex-direction: column; }
+
+    .demo-output-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .demo-output-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+
+    .demo-fetch-btn {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--orange);
+      background: var(--orange-dim);
+      border: 1px solid rgba(247,147,26,0.25);
+      padding: 0.35rem 0.9rem;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: background 0.15s;
+    }
+
+    .demo-fetch-btn:hover { background: rgba(247,147,26,0.2); }
+    .demo-fetch-btn.loading { color: var(--ink-3); }
+
+    .demo-output {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      line-height: 1.9;
+      color: var(--ink-2);
+      min-height: 320px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .do-k{color:#7cc5f4} .do-s{color:#c3a6ff} .do-n{color:var(--green)} .do-b{color:var(--orange)} .do-c{color:var(--ink-3)}
+
+    /* ── L402 FLOW ── */
+    .l402-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: start;
+    }
+
+    .l402-text p {
+      color: var(--ink-2);
+      font-size: 0.92rem;
+      line-height: 1.8;
+      margin-bottom: 1.2rem;
+    }
+
+    .l402-text a {
+      color: var(--orange);
+      text-decoration: none;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+    }
+
+    .flow-steps { display: flex; flex-direction: column; gap: 0; }
+
+    .flow-item {
+      display: grid;
+      grid-template-columns: 3rem 1fr;
+      gap: 1rem;
+      position: relative;
+    }
+
+    .flow-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 1.45rem;
+      top: 2.2rem;
+      bottom: -1rem;
+      width: 1px;
+      background: var(--border);
+    }
+
+    .flow-n {
+      width: 2.2rem; height: 2.2rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--ink-3);
+      flex-shrink: 0;
+      position: relative; z-index: 1;
+      margin-top: 0.15rem;
+    }
+
+    .flow-content { padding-bottom: 2.2rem; }
+
+    .flow-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 0.3rem;
+    }
+
+    .flow-desc { font-size: 0.85rem; color: var(--ink-2); line-height: 1.6; }
+
+    .flow-code {
+      margin-top: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--green);
+      background: var(--green-dim);
+      border: 1px solid rgba(0,211,127,0.15);
+      padding: 0.4rem 0.7rem;
+      display: inline-block;
+    }
+
+    /* ── AI AGENTS CALLOUT ── */
+    .callout {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--orange);
+      padding: 2rem 2.5rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .callout-title {
+      font-family: var(--cond);
+      font-size: 1.4rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--ink);
+      letter-spacing: 0.03em;
+      margin-bottom: 0.5rem;
+    }
+
+    .callout-desc { font-size: 0.9rem; color: var(--ink-2); max-width: 60ch; line-height: 1.7; }
+
+    .callout-stat {
+      text-align: right;
+    }
+
+    .callout-stat-val {
+      font-family: var(--cond);
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--orange);
+      line-height: 1;
+    }
+
+    .callout-stat-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--ink-3);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 2.5rem;
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-logo {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--ink-3);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+
+    .footer-links {
+      display: flex; gap: 2rem; list-style: none;
+    }
+
+    .footer-links a {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--ink-3);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .footer-links a:hover { color: var(--ink); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+
+    .reveal.vis { opacity: 1; transform: translateY(0); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      nav { padding: 0 1.5rem; }
+      .nav-center { display: none; }
+      .nav-price { display: none; }
+      .hero { grid-template-columns: 1fr; padding: 100px 1.5rem 3rem; }
+      .hero-right { order: -1; }
+      .hero-metrics { gap: 2rem; }
+      .section { padding: 4rem 1.5rem; }
+      .steps { grid-template-columns: 1fr; }
+      .ep-row { grid-template-columns: 1fr 80px; gap: 1rem; }
+      .ep-row .ep-desc { display: none; }
+      .ep-row .ep-tag { display: none; }
+      .demo-wrap { grid-template-columns: 1fr; }
+      .l402-grid { grid-template-columns: 1fr; gap: 3rem; }
+      .callout { grid-template-columns: 1fr; }
+      .callout-stat { text-align: left; }
+      footer { flex-direction: column; gap: 1.5rem; align-items: flex-start; }
+    }
+  </style>
 </head>
 <body>
 
+<!-- NAV -->
 <nav>
-  <div class="logo"><div class="logo-dot"></div>SATS_API</div>
-  <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">
-    <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-  </button>
-  <ul class="nav-links">
-    <li><a href="#endpoints">Endpoints</a></li>
-    <li><a href="#demo">Demo</a></li>
-    <li><a href="/docs.html">Docs</a></li>
-    <li><a href="#pricing">Pricing</a></li>
-    <li><a href="#demo" class="nav-cta">Try Now</a></li>
-  </ul>
+  <a href="/" class="nav-logo">
+    <span class="nav-logo-dot"></span>
+    SATSAPI
+  </a>
+  <div class="nav-center">
+    <a href="#how-it-works">How it works</a>
+    <a href="#endpoints">Endpoints</a>
+    <a href="#l402">L402</a>
+    <a href="#demo">Demo</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-price">BTC <span id="nav-price">—</span></div>
+    <a href="/docs" class="btn-nav">Docs →</a>
+  </div>
 </nav>
 
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track" id="ticker">
+    <span class="ticker-item"><span>BTC/USD</span><span class="tk-val" id="t-p">—</span><span id="t-ch">—</span></span>
+    <span class="ticker-sep">·</span>
+    <span class="ticker-item"><span>FEAR &amp; GREED</span><span class="tk-val" id="t-fg">—</span></span>
+    <span class="ticker-sep">·</span>
+    <span class="ticker-item"><span>MEMPOOL</span><span class="tk-val" id="t-mp">—</span></span>
+    <span class="ticker-sep">·</span>
+    <span class="ticker-item"><span>DOMINANCE</span><span class="tk-val" id="t-dm">—</span></span>
+    <span class="ticker-sep">·</span>
+    <span class="ticker-item"><span>PROTOCOL</span><span class="tk-val">L402 ⚡</span></span>
+    <span class="ticker-sep">·</span>
+    <span class="ticker-item"><span>MIN COST</span><span class="tk-val">2 SATS</span></span>
+    <span class="ticker-sep">·</span>
+    <span class="ticker-item"><span>NETWORK</span><span class="tk-val">MAINNET</span></span>
+    <span class="ticker-sep">·</span>
+    <!-- duplicate for infinite -->
+    <span class="ticker-item"><span>BTC/USD</span><span class="tk-val" id="t-p2">—</span><span id="t-ch2">—</span></span>
+    <span class="ticker-sep">·</span>
+    <span class="ticker-item"><span>FEAR &amp; GREED</span><span class="tk-val" id="t-fg2">—</span></span>
+    <span class="ticker-sep">·</span>
+    <span class="ticker-item"><span>MEMPOOL</span><span class="tk-val" id="t-mp2">—</span></span>
+    <span class="ticker-sep">·</span>
+    <span class="ticker-item"><span>DOMINANCE</span><span class="tk-val" id="t-dm2">—</span></span>
+    <span class="ticker-sep">·</span>
+    <span class="ticker-item"><span>PROTOCOL</span><span class="tk-val">L402 ⚡</span></span>
+    <span class="ticker-sep">·</span>
+    <span class="ticker-item"><span>MIN COST</span><span class="tk-val">2 SATS</span></span>
+    <span class="ticker-sep">·</span>
+    <span class="ticker-item"><span>NETWORK</span><span class="tk-val">MAINNET</span></span>
+    <span class="ticker-sep">·</span>
+  </div>
+</div>
+
 <!-- HERO -->
-<section class="hero" id="home">
-  <div class="hero-grid"></div>
-  <div class="hero-glow"></div>
-  <div class="hero-content">
-    <div class="hero-tag">Bitcoin Intelligence API · Lightning Network · L402</div>
-    <h1>Market data.<br><em>Pay in sats.</em></h1>
-    <p class="hero-sub">
-      <strong>8 endpoints</strong> covering price, mempool, on-chain data, derivatives, AI-powered signals and more.
-      No subscription. No registration. No API key. Just pay per call in satoshis.
-    </p>
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-badge">L402 · Lightning Network · Mainnet</div>
+    <h1 class="hero-title">
+      Bitcoin<br>
+      <span class="hl">Intelligence</span><br>
+      <span class="dim">API.</span>
+    </h1>
+    <p class="hero-sub">No subscriptions. No API keys. Pay per request with Lightning Network using the L402 protocol. Bitcoin data for developers, traders, and AI agents — starting at 2 sats.</p>
     <div class="hero-actions">
-      <a href="#demo" class="btn-primary">Try it live →</a>
-      <a href="/docs.html" class="btn-ghost">View docs →</a>
+      <a href="/docs" class="btn-primary">→ Read the docs</a>
+      <a href="#demo" class="btn-secondary">Try it live</a>
+    </div>
+    <div class="hero-metrics">
+      <div>
+        <div class="metric-val">2<sub>sats</sub></div>
+        <div class="metric-label">Min cost</div>
+      </div>
+      <div>
+        <div class="metric-val">2M<sub>sats</sub></div>
+        <div class="metric-label">Inbound liquidity</div>
+      </div>
+      <div>
+        <div class="metric-val">8<sub>endpoints</sub></div>
+        <div class="metric-label">Available now</div>
+      </div>
     </div>
   </div>
-  <div class="hero-stats">
-    <div class="hero-stat"><div class="hero-stat-val">8</div><div class="hero-stat-label">Endpoints</div></div>
-    <div class="hero-stat"><div class="hero-stat-val" id="stat-price">—</div><div class="hero-stat-label">BTC / USD</div></div>
-    <div class="hero-stat"><div class="hero-stat-val" id="stat-fng">—</div><div class="hero-stat-label">Fear & Greed</div></div>
-    <div class="hero-stat"><div class="hero-stat-val">L402</div><div class="hero-stat-label">Protocol</div></div>
-  </div>
-  <div class="ticker-bar">
-    <div class="ticker-inner">
-      <div class="ticker-item"><span class="ticker-label">BTC/USD</span><span class="ticker-val" id="t-price">—</span></div>
-      <div class="ticker-item"><span class="ticker-label">FEES</span><span class="ticker-val" id="t-mempool">—</span></div>
-      <div class="ticker-item"><span class="ticker-label">BLOCK</span><span class="ticker-val" id="t-block">—</span></div>
-      <div class="ticker-item"><span class="ticker-label">F&G</span><span class="ticker-val" id="t-fng">—</span></div>
-      <div class="ticker-item"><span class="ticker-label">RSI 1D</span><span class="ticker-val" id="t-rsi">—</span></div>
-      <div class="ticker-item"><span class="ticker-label">TREND</span><span class="ticker-val" id="t-trend">—</span></div>
-      <div class="ticker-item"><span class="ticker-label">BTC/USD</span><span class="ticker-val" id="t-price2">—</span></div>
-      <div class="ticker-item"><span class="ticker-label">FEES</span><span class="ticker-val" id="t-mempool2">—</span></div>
-      <div class="ticker-item"><span class="ticker-label">BLOCK</span><span class="ticker-val" id="t-block2">—</span></div>
-      <div class="ticker-item"><span class="ticker-label">F&G</span><span class="ticker-val" id="t-fng2">—</span></div>
-      <div class="ticker-item"><span class="ticker-label">RSI 1D</span><span class="ticker-val" id="t-rsi2">—</span></div>
-      <div class="ticker-item"><span class="ticker-label">TREND</span><span class="ticker-val" id="t-trend2">—</span></div>
+
+  <div class="hero-right">
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="t-dot r"></div>
+        <div class="t-dot y"></div>
+        <div class="t-dot g"></div>
+        <div class="terminal-url">satsapi.dev — curl</div>
+      </div>
+      <div class="terminal-body" id="terminal-body">
+        <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd"> curl https://satsapi.dev/v1/price</span></div>
+      </div>
     </div>
   </div>
 </section>
 
-<div class="divider"></div>
+<hr class="divider">
 
-<!-- ENDPOINTS -->
-<div id="endpoints">
-  <div class="endpoints-header">
-    <div class="section-label">Endpoints</div>
-    <h2>Eight endpoints.<br><span>Real intelligence.</span></h2>
-    <p class="section-desc">Every endpoint returns structured JSON optimized for both humans and AI agents.</p>
-  </div>
-  <div class="endpoints-grid">
-    <div class="ep-card">
-      <svg class="ep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"/><path d="m7 16 4-4 4 4 4-4"/></svg>
-      <div class="ep-method">GET</div><div class="ep-path">/v1/price</div>
-      <div class="ep-desc">Real-time BTC price with RSI, 50/200-day moving averages, MACD bias and trend direction.</div>
-      <div class="ep-tags"><span class="ep-tag">RSI</span><span class="ep-tag">MACD</span><span class="ep-tag">MA</span></div>
-      <div class="ep-footer"><div class="ep-cost">3 sats</div><div class="ep-rate">60 req/min</div></div>
+<!-- AI AGENTS CALLOUT -->
+<div class="section" style="padding-top:3rem;padding-bottom:3rem;">
+  <div class="callout reveal">
+    <div>
+      <div class="callout-title">Built for AI Agents &amp; Automation</div>
+      <div class="callout-desc">L402 turns payment into authentication — AI agents can autonomously pay for Bitcoin data without accounts, sessions, or human intervention. Perfect for LangChain, AutoGPT, or any autonomous agent that needs real-time market data.</div>
     </div>
-    <div class="ep-card">
-      <svg class="ep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
-      <div class="ep-method">GET</div><div class="ep-path">/v1/mempool</div>
-      <div class="ep-desc">Mempool status with optimal fees for 10min, 30min and 1h confirmation windows. Last block data.</div>
-      <div class="ep-tags"><span class="ep-tag">Fees</span><span class="ep-tag">Blocks</span></div>
-      <div class="ep-footer"><div class="ep-cost">2 sats</div><div class="ep-rate">60 req/min</div></div>
-    </div>
-    <div class="ep-card">
-      <svg class="ep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <div class="ep-method">GET</div><div class="ep-path">/v1/tx/:txid</div>
-      <div class="ep-desc">Transaction lookup by TXID. Returns status, confirmations, fee rate, inputs, outputs and block time.</div>
-      <div class="ep-tags"><span class="ep-tag">Confirmed</span><span class="ep-tag">Pending</span></div>
-      <div class="ep-footer"><div class="ep-cost">2 sats</div><div class="ep-rate">60 req/min</div></div>
-    </div>
-    <div class="ep-card">
-      <svg class="ep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><path d="M18 2v4h4"/></svg>
-      <div class="ep-method">GET</div><div class="ep-path">/v1/onchain</div>
-      <div class="ep-desc">Fear & Greed index, BTC dominance, circulating supply, hashrate trend and market phase detection.</div>
-      <div class="ep-tags"><span class="ep-tag">Fear&Greed</span><span class="ep-tag">Hashrate</span></div>
-      <div class="ep-footer"><div class="ep-cost">15 sats</div><div class="ep-rate">60 req/min</div></div>
-    </div>
-    <div class="ep-card">
-      <svg class="ep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-      <div class="ep-method">GET</div><div class="ep-path">/v1/derivatives</div>
-      <div class="ep-desc">Funding rate, open interest trend, long/short ratio and leverage risk assessment from perpetuals markets.</div>
-      <div class="ep-tags"><span class="ep-tag">Funding</span><span class="ep-tag">OI</span><span class="ep-tag">L/S</span></div>
-      <div class="ep-footer"><div class="ep-cost">15 sats</div><div class="ep-rate">60 req/min</div></div>
-    </div>
-    <div class="ep-card">
-      <svg class="ep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
-      <div class="ep-method">GET</div><div class="ep-path">/v1/news</div>
-      <div class="ep-desc">AI-generated daily Bitcoin news summary with sentiment score and top 3 market-moving events. Cached 6h.</div>
-      <div class="ep-tags"><span class="ep-tag">AI</span><span class="ep-tag">Sentiment</span><span class="ep-tag">Cached 6h</span></div>
-      <div class="ep-footer"><div class="ep-cost">50 sats</div><div class="ep-rate">10 req/min</div></div>
-    </div>
-    <div class="ep-card">
-      <svg class="ep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-      <div class="ep-method">GET</div><div class="ep-path">/v1/signal</div>
-      <div class="ep-desc">9-factor BUY/SELL/HOLD signal with confluence score, Pi Cycle Top detection, multi-timeframe RSI and ATR trade setup.</div>
-      <div class="ep-tags"><span class="ep-tag">AI</span><span class="ep-tag">Pi Cycle</span><span class="ep-tag">ATR</span></div>
-      <div class="ep-footer"><div class="ep-cost">150 sats</div><div class="ep-rate">10 req/min</div></div>
-    </div>
-    <div class="ep-card" style="border:1px solid var(--amber);background:var(--amber-glow)">
-      <svg class="ep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:1"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-      <div class="ep-method" style="background:var(--amber);color:var(--bg)">GET ★</div>
-      <div class="ep-path">/v1/summary</div>
-      <div class="ep-desc">Everything in one call. Market score 0–100, AI executive summary, risk matrix, key levels, bot-ready flat fields.</div>
-      <div class="ep-tags"><span class="ep-tag">All-in-one</span><span class="ep-tag">Bot-ready</span><span class="ep-tag">Risk matrix</span></div>
-      <div class="ep-footer"><div class="ep-cost">200 sats</div><div class="ep-rate">5 req/min</div></div>
+    <div class="callout-stat">
+      <div class="callout-stat-val">1B+</div>
+      <div class="callout-stat-label">L402 responses/day<br>processed by Cloudflare</div>
     </div>
   </div>
 </div>
 
-<div class="divider"></div>
+<hr class="divider">
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how-it-works">
+  <div class="section-header reveal">
+    <span class="section-num">01</span>
+    <h2 class="section-title">How it <span class="hl">works</span></h2>
+  </div>
+  <div class="steps reveal">
+    <div class="step">
+      <div class="step-num">STEP 01 / REQUEST</div>
+      <div class="step-title">Make a request</div>
+      <p class="step-desc">Send a GET request to any endpoint. No headers, no auth, no setup required. The server responds with HTTP 402.</p>
+      <div class="step-code">
+<span class="sc-c"># Request</span>
+GET /v1/price HTTP/1.1
+Host: satsapi.dev
+
+<span class="sc-c"># Response: 402</span>
+<span class="sc-k">"invoice"</span>: <span class="sc-v">"lnbc30n1..."</span>
+<span class="sc-k">"amount_sats"</span>: <span class="sc-n">3</span>
+<span class="sc-k">"payment_hash"</span>: <span class="sc-v">"fa7f01..."</span></div>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 02 / PAY</div>
+      <div class="step-title">Pay the invoice</div>
+      <p class="step-desc">Pay with any Lightning wallet — Phoenix, Alby — or programmatically using WebLN, LNC, or any Lightning library.</p>
+      <div class="step-code">
+<span class="sc-c"># WebLN (browser)</span>
+await webln
+  .sendPayment(invoice)
+
+<span class="sc-c"># LNC (programmatic)</span>
+await lnc.lnd.lightning
+  .sendPaymentSync({
+    <span class="sc-k">payment_request</span>: invoice
+  })</div>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 03 / RECEIVE</div>
+      <div class="step-title">Get your data</div>
+      <p class="step-desc">Retry the request with the payment hash as query param. The server verifies proof of payment and returns the data.</p>
+      <div class="step-code">
+<span class="sc-c"># Retry with proof</span>
+GET /v1/price
+  ?payment_hash=<span class="sc-v">fa7f01...</span>
+
+<span class="sc-c"># Response: 200 ✓</span>
+<span class="sc-k">"price"</span>: <span class="sc-n">67284.16</span>
+<span class="sc-k">"rsi_14"</span>: <span class="sc-n">49.3</span>
+<span class="sc-k">"trend"</span>: <span class="sc-v">"BEARISH"</span></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ENDPOINTS -->
+<section class="section" id="endpoints">
+  <div class="section-header reveal">
+    <span class="section-num">02</span>
+    <h2 class="section-title">Endpoints</h2>
+  </div>
+  <div class="ep-grid reveal">
+    <div class="ep-row header">
+      <span>Endpoint</span>
+      <span>Cost</span>
+      <span>Returns</span>
+      <span>Type</span>
+    </div>
+    <div class="ep-row">
+      <div class="ep-path"><span class="method">GET</span>/v1/price</div>
+      <div class="ep-cost">3 sats</div>
+      <div class="ep-desc">Price, RSI 14, MA50/200, MACD bias, 24h change &amp; volume</div>
+      <div class="ep-tag">live</div>
+    </div>
+    <div class="ep-row">
+      <div class="ep-path"><span class="method">GET</span>/v1/mempool</div>
+      <div class="ep-cost">2 sats</div>
+      <div class="ep-desc">Pending transactions, fee estimates (fast/medium/slow), congestion</div>
+      <div class="ep-tag">live</div>
+    </div>
+    <div class="ep-row">
+      <div class="ep-path"><span class="method">GET</span>/v1/tx/:txid</div>
+      <div class="ep-cost">2 sats</div>
+      <div class="ep-desc">Transaction details, confirmations, inputs and outputs</div>
+      <div class="ep-tag">live</div>
+    </div>
+    <div class="ep-row">
+      <div class="ep-path"><span class="method">GET</span>/v1/onchain</div>
+      <div class="ep-cost">15 sats</div>
+      <div class="ep-desc">Fear &amp; Greed index, BTC dominance, supply stats, hashrate, market phase</div>
+      <div class="ep-tag">live</div>
+    </div>
+    <div class="ep-row">
+      <div class="ep-path"><span class="method">GET</span>/v1/derivatives</div>
+      <div class="ep-cost">15 sats</div>
+      <div class="ep-desc">Funding rate, open interest, long/short ratio, leverage risk</div>
+      <div class="ep-tag">live</div>
+    </div>
+    <div class="ep-row">
+      <div class="ep-path"><span class="method">GET</span>/v1/news</div>
+      <div class="ep-cost">50 sats</div>
+      <div class="ep-desc">AI-analyzed Bitcoin news sentiment, top events summary (cached 6h)</div>
+      <div class="ep-tag ai">AI</div>
+    </div>
+    <div class="ep-row">
+      <div class="ep-path"><span class="method">GET</span>/v1/signal</div>
+      <div class="ep-cost">150 sats</div>
+      <div class="ep-desc">BUY/SELL/HOLD signal with confluence score, trade setup, AI reasoning</div>
+      <div class="ep-tag ai">AI</div>
+    </div>
+    <div class="ep-row">
+      <div class="ep-path"><span class="method">GET</span>/v1/summary ★</div>
+      <div class="ep-cost">200 sats</div>
+      <div class="ep-desc">Full briefing: all data aggregated + executive summary + bot_ready object</div>
+      <div class="ep-tag ai">AI</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
 
 <!-- DEMO -->
-<section id="demo">
-  <div class="section-label">Live Demo</div>
-  <h2>Try it.<br><span>No signup required.</span></h2>
-  <p class="section-desc">Real data straight from the API. Select <code style="color:var(--amber);font-family:'IBM Plex Mono',monospace">/v1/price</code> for a free live call — other endpoints show the L402 payment flow.</p>
-  <div class="demo-layout">
-    <div class="demo-panel">
-      <div class="demo-panel-label"><div class="live-dot"></div> Select endpoint</div>
-      <select id="ep-select" onchange="updateCost()">
-        <option value="price">GET /v1/price — free demo</option>
-        <option value="mempool">GET /v1/mempool — 2 sats</option>
-        <option value="tx">GET /v1/tx/:txid — 2 sats</option>
-        <option value="onchain">GET /v1/onchain — 15 sats</option>
-        <option value="derivatives">GET /v1/derivatives — 15 sats</option>
-        <option value="news">GET /v1/news — 50 sats</option>
-        <option value="signal">GET /v1/signal — 150 sats</option>
-        <option value="summary">GET /v1/summary — 200 sats</option>
-      </select>
-      <div class="cost-display">
-        <div class="cost-num" id="demo-cost">FREE</div>
-        <div class="cost-unit" id="demo-unit">demo</div>
-        <div class="cost-eur" id="demo-eur"></div>
+<section class="section" id="demo">
+  <div class="section-header reveal">
+    <span class="section-num">03</span>
+    <h2 class="section-title">Live <span class="hl">demo</span></h2>
+  </div>
+  <div class="demo-wrap reveal">
+    <div class="demo-sidebar">
+      <div class="demo-sidebar-label">Select endpoint</div>
+      <ul class="demo-ep-list" id="demo-ep-list">
+        <li class="demo-ep-item active" data-ep="price"><span class="demo-ep-path">GET /v1/price</span><span class="demo-ep-cost">3 sats</span></li>
+        <li class="demo-ep-item" data-ep="mempool"><span class="demo-ep-path">GET /v1/mempool</span><span class="demo-ep-cost">2 sats</span></li>
+        <li class="demo-ep-item" data-ep="onchain"><span class="demo-ep-path">GET /v1/onchain</span><span class="demo-ep-cost">15 sats</span></li>
+        <li class="demo-ep-item" data-ep="derivatives"><span class="demo-ep-path">GET /v1/derivatives</span><span class="demo-ep-cost">15 sats</span></li>
+        <li class="demo-ep-item" data-ep="signal"><span class="demo-ep-path">GET /v1/signal</span><span class="demo-ep-cost">150 sats</span></li>
+      </ul>
+      <p style="margin-top:1.5rem;font-family:var(--mono);font-size:0.6rem;color:var(--ink-3);line-height:1.7;">* Preview uses cached data.<br>Real requests require Lightning payment.</p>
+    </div>
+    <div class="demo-output-wrap">
+      <div class="demo-output-header">
+        <div class="demo-output-label">Response preview</div>
+        <button class="demo-fetch-btn" id="demo-fetch-btn" onclick="fetchDemo()">→ fetch /v1/price</button>
       </div>
-      <button class="run-btn" onclick="runDemo()">Execute call →</button>
-    </div>
-    <div class="demo-panel">
-      <div class="demo-panel-label"><div class="live-dot"></div> Response</div>
-      <div class="response-area" id="demo-response">// Select an endpoint and click Execute...</div>
+      <div class="demo-output" id="demo-output"><span class="do-c">// Select an endpoint and click fetch →</span></div>
     </div>
   </div>
 </section>
 
-<div class="divider"></div>
+<hr class="divider">
 
-<!-- HOW L402 WORKS -->
-<section id="how">
-  <div class="section-label">Protocol</div>
-  <h2>How <span>L402</span> works.</h2>
-  <p class="section-desc">No accounts. No API keys. No subscriptions. One HTTP round-trip and a Lightning payment is all it takes.</p>
-  <div class="steps-grid">
-    <div class="step-card">
-      <div class="step-num"></div>
-      <div class="step-title">Make the request</div>
-      <div class="step-desc">Call any endpoint like a standard GET request. No headers, no auth. The server responds with HTTP 402 and a BOLT11 Lightning invoice in the response body.</div>
-    </div>
-    <div class="step-card">
-      <div class="step-num"></div>
-      <div class="step-title">Pay the invoice</div>
-      <div class="step-desc">Pay the invoice with any Lightning wallet — Phoenix, Breez, Alby, lncli. Payment settles in milliseconds. You receive a payment hash as proof.</div>
-    </div>
-    <div class="step-card">
-      <div class="step-num"></div>
-      <div class="step-title">Receive the data</div>
-      <div class="step-desc">Resend the same request with <code style="color:var(--amber)">?payment_hash=</code> appended. The server verifies on-chain and returns the full JSON response.</div>
-    </div>
-    <div class="step-card">
-      <div class="step-num"></div>
-      <div class="step-title">Agents pay autonomously</div>
-      <div class="step-desc">AI agents using lnget or WebLN handle the full 402 → pay → retry loop automatically. No human needed. True machine-to-machine payments.</div>
-    </div>
+<!-- L402 -->
+<section class="section" id="l402">
+  <div class="section-header reveal">
+    <span class="section-num">04</span>
+    <h2 class="section-title">What is <span class="hl">L402</span>?</h2>
   </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- CODE EXAMPLES -->
-<section id="code">
-  <div class="section-label">Integration</div>
-  <h2>Three lines.<br><span>Any language.</span></h2>
-  <p class="section-desc">Standard REST + L402. If you can fetch JSON, you can use SatsAPI. <a href="/docs.html" style="color:var(--amber);text-decoration:none">Full docs →</a></p>
-  <div class="code-tabs">
-    <button class="code-tab active" onclick="showTab('js',event)">JavaScript</button>
-    <button class="code-tab" onclick="showTab('python',event)">Python</button>
-    <button class="code-tab" onclick="showTab('curl',event)">cURL</button>
-    <button class="code-tab" onclick="showTab('bot',event)">AI Agent</button>
-  </div>
-  <div class="code-block active" id="tab-js"><span class="c-comment">// 1. Make the request</span>
-<span class="c-keyword">let</span> <span class="c-var">res</span> = <span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">'https://satsapi.dev/v1/signal'</span>);
-
-<span class="c-comment">// 2. Server returns HTTP 402 + Lightning invoice</span>
-<span class="c-keyword">if</span> (res.status === <span class="c-num2">402</span>) {
-  <span class="c-keyword">const</span> { invoice, payment_hash } = <span class="c-keyword">await</span> res.<span class="c-func">json</span>();
-  <span class="c-keyword">await</span> wallet.<span class="c-func">payInvoice</span>(invoice); <span class="c-comment">// Lightning payment — instant</span>
-
-  <span class="c-comment">// 3. Resend with payment proof</span>
-  <span class="c-var">res</span> = <span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">`https://satsapi.dev/v1/signal?payment_hash=<span class="c-var">${payment_hash}</span>`</span>);
-}
-
-<span class="c-keyword">const</span> { data } = <span class="c-keyword">await</span> res.<span class="c-func">json</span>();
-console.<span class="c-func">log</span>(data.signal);     <span class="c-comment">// "BUY" | "SELL" | "HOLD"</span>
-console.<span class="c-func">log</span>(data.confluence); <span class="c-comment">// 0–100 confidence score</span></div>
-
-  <div class="code-block" id="tab-python"><span class="c-keyword">import</span> requests
-
-<span class="c-comment"># 1. Make the request</span>
-r = requests.<span class="c-func">get</span>(<span class="c-string">'https://satsapi.dev/v1/signal'</span>)
-
-<span class="c-comment"># 2. Server returns 402 + Lightning invoice</span>
-<span class="c-keyword">if</span> r.status_code == <span class="c-num2">402</span>:
-    body    = r.<span class="c-func">json</span>()
-    invoice = body[<span class="c-string">'invoice'</span>]
-    phash   = body[<span class="c-string">'payment_hash'</span>]
-
-    wallet.<span class="c-func">pay_invoice</span>(invoice)  <span class="c-comment"># any LN wallet / library</span>
-
-    <span class="c-comment"># 3. Resend with payment proof</span>
-    r = requests.<span class="c-func">get</span>(
-        <span class="c-string">'https://satsapi.dev/v1/signal'</span>,
-        params={<span class="c-string">'payment_hash'</span>: phash}
-    )
-
-data = r.<span class="c-func">json</span>()[<span class="c-string">'data'</span>]
-<span class="c-func">print</span>(data[<span class="c-string">'signal'</span>])     <span class="c-comment"># "HOLD"</span>
-<span class="c-func">print</span>(data[<span class="c-string">'confluence'</span>]) <span class="c-comment"># 52</span></div>
-
-  <div class="code-block" id="tab-curl"><span class="c-comment"># Step 1 — request returns 402 + invoice</span>
-curl -s https://satsapi.dev/v1/price
-<span class="c-comment"># → { "invoice": "lnbc30n1p...", "payment_hash": "abc123...", "amount_sats": 3 }</span>
-
-<span class="c-comment"># Step 2 — pay with any Lightning wallet</span>
-<span class="c-comment"># (Phoenix, Breez, lncli, Alby...)</span>
-
-<span class="c-comment"># Step 3 — resend with payment proof</span>
-curl -s "https://satsapi.dev/v1/price?payment_hash=abc123..." | jq .data
-
-<span class="c-comment"># Or use lnget — handles 402 automatically:</span>
-lnget https://satsapi.dev/v1/signal | jq .data.signal</div>
-
-  <div class="code-block" id="tab-bot"><span class="c-comment">// Autonomous agent — full L402 loop</span>
-<span class="c-keyword">async function</span> <span class="c-func">callSatsAPI</span>(endpoint) {
-  <span class="c-keyword">let</span> res = <span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">`https://satsapi.dev${endpoint}`</span>);
-
-  <span class="c-keyword">if</span> (res.status === <span class="c-num2">402</span>) {
-    <span class="c-keyword">const</span> { invoice, payment_hash } = <span class="c-keyword">await</span> res.<span class="c-func">json</span>();
-    <span class="c-keyword">await</span> wallet.<span class="c-func">pay</span>(invoice);  <span class="c-comment">// agent pays — no human</span>
-    res = <span class="c-keyword">await</span> <span class="c-func">fetch</span>(<span class="c-string">`https://satsapi.dev${endpoint}?payment_hash=<span class="c-var">${payment_hash}</span>`</span>);
-  }
-  <span class="c-keyword">return</span> (<span class="c-keyword">await</span> res.<span class="c-func">json</span>()).data;
-}
-
-<span class="c-comment">// One call gets everything a trading bot needs:</span>
-<span class="c-keyword">const</span> d = <span class="c-keyword">await</span> <span class="c-func">callSatsAPI</span>(<span class="c-string">'/v1/summary'</span>);
-<span class="c-comment">// d.bot_ready → { signal, confluence, market_score,</span>
-<span class="c-comment">//   price_usd, fear_greed, support, resistance,</span>
-<span class="c-comment">//   leverage_risk, highest_risk }</span>
-
-<span class="c-keyword">if</span> (d.bot_ready.signal === <span class="c-string">'BUY'</span> && d.bot_ready.confluence > <span class="c-num2">65</span>) {
-  <span class="c-keyword">await</span> exchange.<span class="c-func">buy</span>(d.bot_ready.price_usd);
-}</div>
-</section>
-
-<div class="divider"></div>
-
-<!-- AI BOTS -->
-<section id="bots">
-  <div class="section-label">AI Agents</div>
-  <h2>Built for <span>bots.</span></h2>
-  <p class="section-desc">Every response includes a <code style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:0.9em">bot_ready</code> object — flat, typed, zero parsing required.</p>
-  <div class="bots-grid">
-    <div class="bot-card">
-      <svg class="bot-icon-wrap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-      <div class="bot-title">Native Lightning payments</div>
-      <div class="bot-desc">Agents pay via L402 without human involvement. Compatible with lnget, Aperture, LNC and WebLN. No API key to rotate, no account to manage.</div>
+  <div class="l402-grid reveal">
+    <div class="l402-text">
+      <p>L402 is a machine-native payment protocol developed by Lightning Labs that repurposes HTTP's 402 "Payment Required" status code. It enables micropayments directly in the HTTP layer — no accounts, no sessions, no billing system.</p>
+      <p>The payment hash returned after paying the Lightning invoice acts as cryptographic proof of payment. The server verifies it without any database lookup — stateless, instant, and global.</p>
+      <p>As of 2025, Cloudflare processes over 1 billion L402 responses per day. AI agents and automated systems are the fastest-growing consumers of L402 APIs — the protocol is purpose-built for machine-to-machine commerce.</p>
+      <p><a href="https://docs.lightning.engineering/the-lightning-network/l402" target="_blank">L402 specification by Lightning Labs →</a></p>
     </div>
-    <div class="bot-card">
-      <svg class="bot-icon-wrap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
-      <div class="bot-title">Flat bot_ready fields</div>
-      <div class="bot-desc"><code style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:0.82em">if (data.signal === 'BUY' && data.confluence > 65)</code> — that's the entire decision logic. No nested parsing, no normalization needed.</div>
-    </div>
-    <div class="bot-card">
-      <svg class="bot-icon-wrap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      <div class="bot-title">LLM-ready narrative</div>
-      <div class="bot-desc">The <code style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:0.82em">executive_summary</code> field returns analyst-grade text you can inject directly into an LLM prompt for downstream reasoning.</div>
-    </div>
-    <div class="bot-card">
-      <svg class="bot-icon-wrap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      <div class="bot-title">Predictable rate limits</div>
-      <div class="bot-desc">Per-endpoint limits in response headers. Your agent knows exactly how fast it can call. No surprise 429s mid-strategy.</div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- PRICING -->
-<section id="pricing">
-  <div class="section-label">Pricing</div>
-  <h2>Pay exactly<br><span>what you use.</span></h2>
-  <p class="section-desc">No monthly fees. No tiers. No surprises. Each call costs a fixed number of satoshis, settled instantly on Lightning.</p>
-  <div class="pricing-grid">
-    <div class="price-card"><div class="price-ep">/v1/price</div><div class="price-sats">3</div><div class="price-label">sats / call</div><div class="price-eur">≈ 0.002€</div></div>
-    <div class="price-card"><div class="price-ep">/v1/mempool + /v1/tx</div><div class="price-sats">2</div><div class="price-label">sats / call</div><div class="price-eur">≈ 0.002€</div></div>
-    <div class="price-card"><div class="price-ep">/v1/onchain + derivatives</div><div class="price-sats">15</div><div class="price-label">sats / call</div><div class="price-eur">≈ 0.012€</div></div>
-    <div class="price-card"><div class="price-ep">/v1/news</div><div class="price-sats">50</div><div class="price-label">sats / call</div><div class="price-eur">≈ 0.040€</div></div>
-    <div class="price-card"><div class="price-ep">/v1/signal</div><div class="price-sats">150</div><div class="price-label">sats / call</div><div class="price-eur">≈ 0.120€</div></div>
-    <div class="price-card" style="border:1px solid var(--amber);background:var(--amber-glow)">
-      <div class="price-ep">/v1/summary ★</div><div class="price-sats" style="font-size:2rem">200</div>
-      <div class="price-label">sats / call</div><div class="price-eur">≈ 0.160€</div>
-    </div>
-    <div class="price-card" style="grid-column:span 2;text-align:left;padding:2rem">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--muted);line-height:2.4">
-        <span style="color:var(--muted2);text-transform:uppercase;letter-spacing:0.12em;font-size:0.6rem">No commitment. Pay only what you call.</span><br>
-        100 calls/day at avg mix &nbsp;→&nbsp; <span style="color:var(--green)">~$0.04/day</span> &nbsp;·&nbsp;
-        vs. Glassnode Pro <span style="color:var(--red)">$29/month fixed</span> &nbsp;·&nbsp;
-        vs. CryptoQuant <span style="color:var(--red)">$20/month fixed</span><br>
-        Stop calling, stop paying. Scale up instantly. No invoices, no contracts.
+    <div class="flow-steps">
+      <div class="flow-item">
+        <div class="flow-n">01</div>
+        <div class="flow-content">
+          <div class="flow-label">Client requests resource</div>
+          <div class="flow-desc">Any GET to a protected endpoint, no prior setup.</div>
+          <div class="flow-code">GET /v1/signal HTTP/1.1</div>
+        </div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-n">02</div>
+        <div class="flow-content">
+          <div class="flow-label">Server returns 402 + invoice</div>
+          <div class="flow-desc">Lightning invoice and payment hash included in the response.</div>
+          <div class="flow-code">HTTP/1.1 402 Payment Required</div>
+        </div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-n">03</div>
+        <div class="flow-content">
+          <div class="flow-label">Client pays Lightning invoice</div>
+          <div class="flow-desc">Settled in milliseconds, globally, with no intermediary.</div>
+          <div class="flow-code">preimage = wallet.pay(invoice)</div>
+        </div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-n">04</div>
+        <div class="flow-content">
+          <div class="flow-label">Client retries with proof</div>
+          <div class="flow-desc">Server verifies cryptographic proof and returns data instantly.</div>
+          <div class="flow-code">GET /v1/signal?payment_hash=fa7f...</div>
+        </div>
       </div>
     </div>
   </div>
-
-  <!-- COMPARISON TABLE -->
-  <div class="compare-box" style="margin-top:2rem">
-    <div class="compare-header">
-      <div></div>
-      <div class="compare-col-highlight">SatsAPI</div>
-      <div class="compare-col">Glassnode</div>
-      <div class="compare-col">CryptoQuant</div>
-    </div>
-    <div class="compare-row">
-      <div class="compare-feature">Monthly commitment</div>
-      <div class="compare-amber">None</div>
-      <div class="compare-no">$29/mo</div>
-      <div class="compare-no">$20/mo</div>
-    </div>
-    <div class="compare-row">
-      <div class="compare-feature">Pay only what you use</div>
-      <div class="compare-yes">✓</div>
-      <div class="compare-no">✗</div>
-      <div class="compare-no">✗</div>
-    </div>
-    <div class="compare-row">
-      <div class="compare-feature">No account required</div>
-      <div class="compare-yes">✓</div>
-      <div class="compare-no">✗</div>
-      <div class="compare-no">✗</div>
-    </div>
-    <div class="compare-row">
-      <div class="compare-feature">AI-generated signals</div>
-      <div class="compare-yes">✓</div>
-      <div class="compare-no">✗</div>
-      <div class="compare-no">✗</div>
-    </div>
-    <div class="compare-row">
-      <div class="compare-feature">Bot-ready flat fields</div>
-      <div class="compare-yes">✓</div>
-      <div class="compare-no">✗</div>
-      <div class="compare-no">✗</div>
-    </div>
-    <div class="compare-row">
-      <div class="compare-feature">Lightning / L402 native</div>
-      <div class="compare-yes">✓</div>
-      <div class="compare-no">✗</div>
-      <div class="compare-no">✗</div>
-    </div>
-    <div class="compare-row">
-      <div class="compare-feature">Works in 60 seconds</div>
-      <div class="compare-yes">✓</div>
-      <div class="compare-no">✗</div>
-      <div class="compare-no">✗</div>
-    </div>
-  </div>
 </section>
 
-<div class="divider"></div>
+<hr class="divider">
 
 <footer>
-  <div class="footer-left">
-    <strong>SATS_API</strong> · Bitcoin market intelligence · Pay per call · Lightning Network · L402<br>
-    Data: CryptoCompare · mempool.space · Alternative.me · CoinGecko · Claude AI
+  <div class="footer-logo">
+    <span style="color:var(--orange)">⚡</span>
+    SATSAPI — Bitcoin Intelligence API
   </div>
   <ul class="footer-links">
-    <li><a href="#endpoints">Endpoints</a></li>
-    <li><a href="/docs.html">Docs</a></li>
-    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="/docs">Documentation</a></li>
     <li><a href="https://github.com/Aperezvigoa/satsapi" target="_blank">GitHub</a></li>
+    <li><a href="https://satsapi.dev/health">Status</a></li>
+    <li><a href="https://docs.lightning.engineering/the-lightning-network/l402" target="_blank">L402</a></li>
   </ul>
 </footer>
 
 <script>
-const API        = 'https://satsapi.dev';
-const SAT_COSTS  = {price:3,mempool:2,tx:2,onchain:15,derivatives:15,news:50,signal:150,summary:200};
-const EUR_PER_SAT = 0.00082;
-
-// ── Syntax highlight ─────────────────────────────────────────────────────────
-function syntaxHighlight(json) {
-  return JSON.stringify(json, null, 2)
-    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
-      if (/^"/.test(m)) return /:$/.test(m) ? `<span class="j-key">${m}</span>` : `<span class="j-str">${m}</span>`;
-      if (/true|false/.test(m)) return `<span class="j-bool">${m}</span>`;
-      if (/null/.test(m))       return `<span class="j-null">${m}</span>`;
-      return `<span class="j-num">${m}</span>`;
-    })
-    .replace(/[{}\[\],]/g, m => `<span class="j-punc">${m}</span>`);
-}
-
-// ── Demo panel ───────────────────────────────────────────────────────────────
-function updateCost() {
-  const ep = document.getElementById('ep-select').value;
-  const costEl = document.getElementById('demo-cost');
-  const unitEl = document.getElementById('demo-unit');
-  const eurEl  = document.getElementById('demo-eur');
-  if (ep === 'price') {
-    costEl.textContent = 'FREE'; unitEl.textContent = 'demo'; eurEl.textContent = '';
-  } else {
-    const sats = SAT_COSTS[ep];
-    costEl.textContent = sats;
-    unitEl.textContent = 'sats / call';
-    eurEl.textContent  = `≈ ${(sats * EUR_PER_SAT).toFixed(3)}€`;
-  }
-}
-
-async function runDemo() {
-  const ep  = document.getElementById('ep-select').value;
-  const box = document.getElementById('demo-response');
-  box.innerHTML = '<span style="color:var(--amber)">// Fetching live data from satsapi.dev...</span>';
-
-  if (ep === 'price') {
-    try {
-      const res  = await fetch(`${API}/v1/demo`);
-      const data = await res.json();
-      box.style.color = 'var(--text)';
-      box.innerHTML = syntaxHighlight(data);
-    } catch(e) {
-      box.innerHTML = '<span style="color:var(--red)">// Error connecting to API — try again</span>';
-    }
-  } else {
-    const sats = SAT_COSTS[ep] || '?';
-    box.style.color = 'var(--text)';
-    box.innerHTML = syntaxHighlight({
-      status: 402,
-      error: 'Payment Required',
-      amount_sats: sats,
-      invoice: 'lnbc' + sats + 'n1p... (BOLT11)',
-      payment_hash: 'abc123def456...',
-      message: `Pay ${sats} sats via Lightning, then resend with ?payment_hash=`,
-      docs: 'https://satsapi.dev/docs'
-    });
-  }
-}
-
-// ── Code tabs ────────────────────────────────────────────────────────────────
-function showTab(id, e) {
-  document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.code-block').forEach(b => b.classList.remove('active'));
-  document.getElementById(`tab-${id}`).classList.add('active');
-  e.target.classList.add('active');
-}
-
-// ── Live ticker — todas las fuentes directas, NUNCA pasan por el servidor ────
-async function fetchLiveData() {
-
-  // Precio + RSI + Trend — CryptoCompare directo desde el browser
+// ── TICKER DATA ──
+async function loadTicker() {
   try {
-    const [priceRes, histRes] = await Promise.all([
+    const [pr, fr, gr] = await Promise.allSettled([
       fetch('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC&tsyms=USD'),
-      fetch('https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=USD&limit=15')
+      fetch('https://api.alternative.me/fng/'),
+      fetch('https://api.coingecko.com/api/v3/global')
     ]);
-    if (priceRes.ok && histRes.ok) {
-      const pd  = await priceRes.json();
-      const hd  = await histRes.json();
-      const raw = pd.RAW.BTC.USD;
-      const priceNum = raw.PRICE;
-      const chg      = raw.CHANGEPCT24HOUR;
-      const price    = '$' + priceNum.toLocaleString('en-US', {maximumFractionDigits:0});
-      const cls      = chg > 0 ? 'ticker-up' : 'ticker-down';
-      const sign     = chg > 0 ? '+' : '';
-      const chgStr   = chg.toFixed(2) + '%';
+    if (pr.status==='fulfilled') {
+      const d=await pr.value.json(), r=d.RAW.BTC.USD;
+      const price=r.PRICE.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
+      const ch=r.CHANGEPCT24HOUR.toFixed(2), cls=ch>=0?'tk-pos':'tk-neg', sign=ch>=0?'+':'';
+      ['t-p','t-p2'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=price;});
+      ['t-ch','t-ch2'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=sign+ch+'%';el.className=cls;}});
+      const np=document.getElementById('nav-price');if(np)np.textContent=price;
+    }
+    if (fr.status==='fulfilled') {
+      const d=await fr.value.json();
+      const v=d.data[0].value+' ('+d.data[0].value_classification+')';
+      ['t-fg','t-fg2'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=v;});
+    }
+    if (gr.status==='fulfilled') {
+      const d=await gr.value.json();
+      const dm=d.data.market_cap_percentage.btc.toFixed(1)+'%';
+      ['t-dm','t-dm2'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=dm;});
+    }
+    const mr=await fetch('https://mempool.space/api/v1/fees/recommended');
+    if(mr.ok){const d=await mr.json();const v=d.fastestFee+' sat/vB';['t-mp','t-mp2'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=v;});}
+  } catch(e){}
+}
+loadTicker();
 
-      ['t-price','t-price2'].forEach(id => {
-        document.getElementById(id).innerHTML = `${price} <span class="${cls}">(${sign}${chgStr})</span>`;
-      });
-      document.getElementById('stat-price').textContent = price;
+// ── TERMINAL ANIMATION ──
+const TERMINAL_SCRIPT = [
+  { type: 'delay', ms: 800 },
+  { type: 'output', cls: 't-out', text: '  HTTP/1.1 402 Payment Required' },
+  { type: 'output', cls: 't-out t-error', text: '  {"error":"Payment Required",' },
+  { type: 'output', cls: 't-out t-error', text: '   "amount_sats":3,' },
+  { type: 'output', cls: 't-out t-error', text: '   "invoice":"lnbc30n1p5..."}' },
+  { type: 'blank' },
+  { type: 'prompt', cmd: ' # Pay the invoice with Phoenix ⚡' },
+  { type: 'delay', ms: 600 },
+  { type: 'output', cls: 't-out t-success', text: '  ✓ Payment confirmed (3 sats)' },
+  { type: 'blank' },
+  { type: 'prompt', cmd: ' curl "satsapi.dev/v1/price?payment_hash=fa7f01..."' },
+  { type: 'delay', ms: 500 },
+  { type: 'output', cls: 't-out', text: '  HTTP/1.1 200 OK' },
+  { type: 'json', data: {endpoint:'/v1/price',cost_sats:3,data:{symbol:'BTC/USD',price:null,rsi_14:49.3,trend:'BEARISH',macd_bias:'BEARISH'}} },
+  { type: 'blank' },
+  { type: 'cursor' }
+];
 
-      // RSI 14
-      const closes = hd.Data.Data.map(d => d.close);
-      let gains = 0, losses = 0;
-      for (let i = 1; i < closes.length; i++) {
-        const d = closes[i] - closes[i-1];
-        d >= 0 ? gains += d : losses += Math.abs(d);
+let termPrice = 67284;
+async function animateTerminal() {
+  try {
+    const r = await fetch('https://min-api.cryptocompare.com/data/price?fsym=BTC&tsym=USD');
+    const d = await r.json();
+    termPrice = parseFloat(d.USD.toFixed(2));
+  } catch(e) {}
+
+  const body = document.getElementById('terminal-body');
+  if (!body) return;
+
+  for (const step of TERMINAL_SCRIPT) {
+    if (step.type === 'delay') {
+      await sleep(step.ms);
+    } else if (step.type === 'blank') {
+      body.innerHTML += '<div style="height:0.5rem"></div>';
+    } else if (step.type === 'prompt') {
+      const div = document.createElement('div');
+      div.className = 't-line';
+      div.innerHTML = `<span class="t-prompt">$</span><span class="t-cmd">${step.cmd}</span>`;
+      body.appendChild(div);
+      await sleep(200);
+    } else if (step.type === 'output') {
+      const div = document.createElement('div');
+      div.className = 't-line';
+      div.innerHTML = `<span class="${step.cls}">${step.text}</span>`;
+      body.appendChild(div);
+      await sleep(80);
+    } else if (step.type === 'json') {
+      const data = step.data;
+      if (data.data && data.data.price === null) data.data.price = termPrice;
+      const lines = jsonToTermLines(data);
+      for (const line of lines) {
+        const div = document.createElement('div');
+        div.className = 't-line';
+        div.innerHTML = `<span class="t-out">${line}</span>`;
+        body.appendChild(div);
+        await sleep(60);
       }
-      const periods = closes.length - 1;
-      const rsi = losses === 0 ? 100 : parseFloat((100 - 100 / (1 + (gains/periods) / (losses/periods))).toFixed(1));
-      const rCls = rsi < 35 ? 'ticker-down' : rsi > 65 ? 'ticker-up' : 'ticker-val';
-      ['t-rsi','t-rsi2'].forEach(id => {
-        document.getElementById(id).innerHTML = `<span class="${rCls}">${rsi}</span>`;
-      });
-
-      // Trend simple
-      const trend = chg > 1 ? 'BULLISH' : chg < -1 ? 'BEARISH' : 'NEUTRAL';
-      const tCls  = trend === 'BULLISH' ? 'ticker-up' : trend === 'BEARISH' ? 'ticker-down' : 'ticker-val';
-      ['t-trend','t-trend2'].forEach(id => {
-        document.getElementById(id).innerHTML = `<span class="${tCls}">${trend}</span>`;
-      });
+    } else if (step.type === 'cursor') {
+      const div = document.createElement('div');
+      div.className = 't-line';
+      div.innerHTML = `<span class="t-prompt">$</span><span class="t-cursor"></span>`;
+      body.appendChild(div);
     }
-  } catch(e) {}
-
-  // Fees + bloque — mempool.space directo
-  try {
-    const [feesRes, blocksRes] = await Promise.all([
-      fetch('https://mempool.space/api/v1/fees/recommended'),
-      fetch('https://mempool.space/api/v1/blocks')
-    ]);
-    if (feesRes.ok) {
-      const fees = await feesRes.json();
-      ['t-mempool','t-mempool2'].forEach(id => {
-        document.getElementById(id).textContent = `Fast: ${fees.fastestFee} sat/vB`;
-      });
-    }
-    if (blocksRes.ok) {
-      const blocks = await blocksRes.json();
-      ['t-block','t-block2'].forEach(id => {
-        document.getElementById(id).textContent = `#${blocks[0].height.toLocaleString()}`;
-      });
-    }
-  } catch(e) {}
-
-  // Fear & Greed — Alternative.me directo
-  try {
-    const fngRes = await fetch('https://api.alternative.me/fng/?limit=1');
-    if (fngRes.ok) {
-      const fng = await fngRes.json();
-      const val = parseInt(fng.data[0].value);
-      const lbl = fng.data[0].value_classification;
-      document.getElementById('stat-fng').textContent = val;
-      const cls = val < 35 ? 'ticker-down' : val > 65 ? 'ticker-up' : 'ticker-val';
-      ['t-fng','t-fng2'].forEach(id => {
-        document.getElementById(id).innerHTML = `<span class="${cls}">${val} — ${lbl}</span>`;
-      });
-    }
-  } catch(e) {}
+    body.scrollTop = body.scrollHeight;
+  }
 }
 
-fetchLiveData();
-setInterval(fetchLiveData, 60000);
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function jsonToTermLines(obj, indent=0) {
+  const pad = '  '.repeat(indent+1);
+  const lines = [];
+  const entries = Object.entries(obj);
+  lines.push(indent===0 ? '  {' : '{');
+  entries.forEach(([k,v], i) => {
+    const comma = i < entries.length-1 ? ',' : '';
+    if (typeof v === 'object' && v !== null) {
+      const sub = jsonToTermLines(v, indent+1);
+      lines.push(`${pad}<span class="do-k">"${k}"</span>: ${sub[0]}`);
+      sub.slice(1,-1).forEach(l => lines.push(l));
+      lines.push(`${pad.slice(0,-2)}}${comma}`);
+    } else if (typeof v === 'string') {
+      lines.push(`${pad}<span class="do-k">"${k}"</span>: <span class="do-s">"${v}"</span>${comma}`);
+    } else if (typeof v === 'number') {
+      lines.push(`${pad}<span class="do-k">"${k}"</span>: <span class="do-n">${v}</span>${comma}`);
+    } else {
+      lines.push(`${pad}<span class="do-k">"${k}"</span>: <span class="do-b">${v}</span>${comma}`);
+    }
+  });
+  lines.push(indent===0 ? '  }' : `${pad.slice(0,-2)}}`);
+  return lines;
+}
+
+setTimeout(animateTerminal, 600);
+
+// ── DEMO ──
+const DEMO = {
+  price: {endpoint:'/v1/price',cost_sats:3,data:{symbol:'BTC/USD',price:67284.16,change_24h:'-1.09%',high_24h:68191.22,low_24h:66552.66,volume_24h:'$13.54B',ma_50:74178.04,ma_200:95439.80,rsi_14:49.3,trend:'BEARISH',macd_bias:'BEARISH'}},
+  mempool: {endpoint:'/v1/mempool',cost_sats:2,data:{pending_txs:29785,congestion:'LOW',fees:{fast_10min:'2 sat/vB',medium_30min:'1 sat/vB',slow_1h:'1 sat/vB'},last_block:{height:939869,tx_count:3388}}},
+  onchain: {endpoint:'/v1/onchain',cost_sats:15,data:{fear_and_greed:{value:12,label:'Extreme Fear',trend:'DETERIORATING'},dominance:{btc_dominance:'56.6%',total_market_cap_trillion:2.38},supply:{circulating_btc:19999559,percent_mined:'95.24%'},network:{hashrate_eh:941.3,hashrate_trend:'DECREASING'}}},
+  derivatives: {endpoint:'/v1/derivatives',cost_sats:15,data:{funding_rate:{current_pct:-0.20,bias:'SHORTS_PAYING'},open_interest:{usd_billion:1.97,trend:'DECREASING'},long_short:{long_pct:46.1,short_pct:53.9,trend:'MORE_SHORTS'},leverage_risk:'MEDIUM'}},
+  signal: {endpoint:'/v1/signal',cost_sats:150,data:{signal:'HOLD',confluence:48,confidence:0.476,risk_level:'HIGH',reasoning:'Neutral RSI at 49.3 across all timeframes with bearish MACD. Wait for confluence above 60% before entering.',trade_setup:null}}
+};
+
+let selEp = 'price';
+document.querySelectorAll('.demo-ep-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.demo-ep-item').forEach(i=>i.classList.remove('active'));
+    item.classList.add('active');
+    selEp = item.dataset.ep;
+    document.getElementById('demo-fetch-btn').textContent = `→ fetch /v1/${selEp}`;
+    document.getElementById('demo-output').innerHTML = `<span class="do-c">// Click fetch to load /v1/${selEp}</span>`;
+  });
+});
+
+async function fetchDemo() {
+  const btn=document.getElementById('demo-fetch-btn');
+  const out=document.getElementById('demo-output');
+  btn.classList.add('loading'); btn.textContent='// loading...';
+  out.innerHTML='<span class="do-c">// fetching...</span>';
+  await sleep(700);
+  let data = JSON.parse(JSON.stringify(DEMO[selEp]));
+  if (selEp==='price') {
+    try {
+      const r=await fetch('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC&tsyms=USD');
+      const d=await r.json(), raw=d.RAW.BTC.USD;
+      data.data.price=parseFloat(raw.PRICE.toFixed(2));
+      data.data.change_24h=raw.CHANGEPCT24HOUR.toFixed(2)+'%';
+      data.data.high_24h=parseFloat(raw.HIGH24HOUR.toFixed(2));
+      data.data.low_24h=parseFloat(raw.LOW24HOUR.toFixed(2));
+    } catch(e){}
+  }
+  out.innerHTML = syntaxHL(data);
+  btn.classList.remove('loading'); btn.textContent=`→ fetch /v1/${selEp}`;
+}
+
+function syntaxHL(obj, indent=0) {
+  const pad='  '.repeat(indent);
+  if (typeof obj==='string') return `<span class="do-s">"${obj}"</span>`;
+  if (typeof obj==='number') return `<span class="do-n">${obj}</span>`;
+  if (typeof obj==='boolean'||obj===null) return `<span class="do-b">${obj}</span>`;
+  if (Array.isArray(obj)) { return obj.length?`[\n${obj.map(v=>`${pad}  ${syntaxHL(v,indent+1)}`).join(',\n')}\n${pad}]`:'[]'; }
+  const entries=Object.entries(obj).map(([k,v])=>`${pad}  <span class="do-k">"${k}"</span>: ${syntaxHL(v,indent+1)}`).join(',\n');
+  return `{\n${entries}\n${pad}}`;
+}
+
+// ── SCROLL REVEAL ──
+const obs = new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vis');});},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// Auto-load demo
+setTimeout(()=>fetchDemo(), 1200);
 </script>
 </body>
 </html>
