@@ -96,8 +96,8 @@ app.get('/', (req, res) => {
       summary:     { path: '/v1/summary',      cost: '200 sats', rate_limit: '5/min',   description: 'Full market intelligence: all endpoints + executive summary + risk matrix + bot-ready fields' },
     },
     payment:  'Lightning Network (L402)',
-    docs:     'https://satsapi.io/docs',
-    github:   'https://github.com/satsapi',
+    docs: 'https://satsapi.dev/docs',
+    github: 'https://github.com/Aperezvigoa/satsapi',
   });
 });
 

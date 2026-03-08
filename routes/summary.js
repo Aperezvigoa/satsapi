@@ -268,7 +268,7 @@ Current data snapshot:
 
     res.json({
       endpoint: '/v1/summary',
-      cost_sats: 150,
+      cost_sats: 200,
       cached: false,
       data: result,
       timestamp: now.toISOString()
