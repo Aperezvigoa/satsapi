@@ -237,6 +237,7 @@
     </div>
     <div class="sidebar-section">
       <div class="sidebar-title">Endpoints</div>
+      <a href="#ep-demo"        class="sidebar-link"><span class="method-badge" style="background:#4ade80;color:#000">GET</span>/v1/demo <span style="font-size:0.65rem;color:#4ade80;margin-left:4px">FREE</span></a>
       <a href="#ep-price"       class="sidebar-link"><span class="method-badge">GET</span>/v1/price</a>
       <a href="#ep-mempool"     class="sidebar-link"><span class="method-badge">GET</span>/v1/mempool</a>
       <a href="#ep-tx"          class="sidebar-link"><span class="method-badge">GET</span>/v1/tx/:txid</a>
@@ -410,6 +411,35 @@ curl "https://satsapi.dev/v1/price?payment_hash=fa7f01e2d3c4b5a6..."
     <!-- ── ENDPOINTS ── -->
     <div class="doc-section" id="ep-price">
       <h1>Endpoint <span>Reference</span></h1>
+
+      <!-- /v1/demo -->
+      <h2 id="ep-demo">GET /v1/demo</h2>
+      <div class="ep-ref">
+        <div class="ep-ref-header">
+          <span class="ep-badge" style="background:#4ade80;color:#000">GET</span>
+          <span class="ep-ref-path">https://satsapi.dev/v1/demo</span>
+          <span class="ep-cost-badge" style="color:#4ade80">FREE · 5 req/hour</span>
+        </div>
+        <p style="margin:1rem 0 0.5rem;color:var(--ink-2)">Free demo endpoint returning real BTC price data — no Lightning wallet required. Limited to 5 calls per hour per IP. Designed for developers who want to try the API before setting up a Lightning payment.</p>
+        <h4 style="margin:1.2rem 0 0.5rem;font-size:0.8rem;color:var(--ink-2);text-transform:uppercase;letter-spacing:0.05em">Try it now</h4>
+        <pre class="code-block">curl https://satsapi.dev/v1/demo</pre>
+        <h4 style="margin:1.2rem 0 0.5rem;font-size:0.8rem;color:var(--ink-2);text-transform:uppercase;letter-spacing:0.05em">Example response</h4>
+        <pre class="code-block"><span class="c-key">"endpoint"</span>: <span class="c-str">"/v1/demo"</span>,
+<span class="c-key">"cost_sats"</span>: <span class="c-num">0</span>,
+<span class="c-key">"demo"</span>: <span class="c-bool">true</span>,
+<span class="c-key">"data"</span>: {
+  <span class="c-key">"price_usd"</span>:       <span class="c-num">69259</span>,
+  <span class="c-key">"change_24h_pct"</span>:  <span class="c-num">3.13</span>,
+  <span class="c-key">"volume_24h_usd"</span>:  <span class="c-num">49921543297</span>,
+  <span class="c-key">"market_cap_usd"</span>:  <span class="c-num">1384996162769</span>,
+  <span class="c-key">"timestamp"</span>:       <span class="c-str">"2026-03-09T14:52:39.810Z"</span>
+},
+<span class="c-key">"upgrade"</span>: {
+  <span class="c-key">"message"</span>: <span class="c-str">"Get RSI, MACD, signals, mempool, on-chain data and more — pay per call in sats."</span>,
+  <span class="c-key">"docs"</span>:    <span class="c-str">"https://satsapi.dev/docs"</span>
+}</pre>
+        <p style="margin:1rem 0 0;font-size:0.8rem;color:var(--ink-3)">Rate limit: 5 requests/hour per IP. No payment required. Real data from CoinGecko.</p>
+      </div>
 
       <!-- /v1/price -->
       <h2 id="ep-price">GET /v1/price</h2>

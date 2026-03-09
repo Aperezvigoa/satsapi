@@ -30,38 +30,24 @@
     "@type": "SoftwareApplication",
     "name": "SatsAPI",
     "applicationCategory": "DeveloperApplication",
-    "applicationSubCategory": "FinancialDataAPI",
-    "description": "Bitcoin market intelligence API using L402 protocol for pay-per-call access via Lightning Network. No API keys, no subscriptions, no registration. Pay 2-200 satoshis per request. Designed for developers and autonomous AI agents.",
+    "description": "Bitcoin market data API powered by the L402 protocol. Pay per request with Lightning Network. No subscriptions, no API keys.",
     "url": "https://satsapi.dev",
-    "sameAs": ["https://github.com/Aperezvigoa/satsapi"],
     "offers": {
       "@type": "Offer",
       "price": "0.00002",
       "priceCurrency": "USD",
-      "description": "Pay per request via Lightning Network. 2 sats minimum, 200 sats maximum per call.",
-      "availability": "https://schema.org/InStock"
+      "description": "Pay per request starting at 2 satoshis via Lightning Network"
     },
     "featureList": [
-      "Real-time Bitcoin price with RSI, MACD and moving averages",
-      "Mempool fee estimates for 10min, 30min and 1h confirmation",
-      "Fear and Greed Index with trend",
-      "On-chain metrics: dominance, hashrate, supply, market phase",
-      "Derivatives data: funding rates, open interest, leverage risk",
-      "AI-powered news summary with sentiment analysis",
-      "9-factor BUY/SELL/HOLD signal with trade setup",
-      "Full market summary with bot_ready object for AI agents",
-      "L402 Lightning Network authentication",
-      "No API keys required",
-      "No registration required",
-      "Compatible with LangChain, AutoGPT and AI agent frameworks"
-    ],
-    "audience": {
-      "@type": "Audience",
-      "audienceType": "Developers, AI agents, trading bots, Bitcoin builders"
-    },
-    "isAccessibleForFree": false,
-    "paymentAccepted": "Bitcoin Lightning Network",
-    "keywords": "Bitcoin API, Lightning Network, L402, pay per call, AI agents, trading signals, market data, phoenixd, no API key"
+      "Bitcoin price and RSI",
+      "Mempool fee estimates",
+      "Fear and Greed Index",
+      "On-chain metrics",
+      "Derivatives data",
+      "AI-powered trading signals",
+      "L402 Lightning payments",
+      "No API keys required"
+    ]
   }
   </script>
 
@@ -1124,13 +1110,14 @@ GET /v1/price
     <div class="demo-sidebar">
       <div class="demo-sidebar-label">Select endpoint</div>
       <ul class="demo-ep-list" id="demo-ep-list">
-        <li class="demo-ep-item active" data-ep="price"><span class="demo-ep-path">GET /v1/price</span><span class="demo-ep-cost">3 sats</span></li>
+        <li class="demo-ep-item active" data-ep="demo"><span class="demo-ep-path">GET /v1/demo</span><span class="demo-ep-cost" style="color:#4ade80">FREE</span></li>
+        <li class="demo-ep-item" data-ep="price"><span class="demo-ep-path">GET /v1/price</span><span class="demo-ep-cost">3 sats</span></li>
         <li class="demo-ep-item" data-ep="mempool"><span class="demo-ep-path">GET /v1/mempool</span><span class="demo-ep-cost">2 sats</span></li>
         <li class="demo-ep-item" data-ep="onchain"><span class="demo-ep-path">GET /v1/onchain</span><span class="demo-ep-cost">15 sats</span></li>
         <li class="demo-ep-item" data-ep="derivatives"><span class="demo-ep-path">GET /v1/derivatives</span><span class="demo-ep-cost">15 sats</span></li>
         <li class="demo-ep-item" data-ep="signal"><span class="demo-ep-path">GET /v1/signal</span><span class="demo-ep-cost">150 sats</span></li>
       </ul>
-      <p style="margin-top:1.5rem;font-family:var(--mono);font-size:0.6rem;color:var(--ink-3);line-height:1.7;">* Preview uses cached data.<br>Real requests require Lightning payment.</p>
+      <p style="margin-top:1.5rem;font-family:var(--mono);font-size:0.6rem;color:var(--ink-3);line-height:1.7;">* /v1/demo returns real data, no payment needed.<br>All other endpoints require Lightning payment.</p>
     </div>
     <div class="demo-output-wrap">
       <div class="demo-output-header">
@@ -1364,6 +1351,19 @@ async function fetchDemo() {
   const out=document.getElementById('demo-output');
   btn.classList.add('loading'); btn.textContent='// loading...';
   out.innerHTML='<span class="do-c">// fetching...</span>';
+
+  if (selEp === 'demo') {
+    try {
+      const r = await fetch('https://satsapi.dev/v1/demo');
+      const data = await r.json();
+      out.innerHTML = syntaxHL(data);
+    } catch(e) {
+      out.innerHTML = '<span class="do-c">// error fetching demo data</span>';
+    }
+    btn.classList.remove('loading'); btn.textContent='→ fetch /v1/demo';
+    return;
+  }
+
   await sleep(700);
   let data = JSON.parse(JSON.stringify(DEMO[selEp]));
   if (selEp==='price') {
@@ -1394,7 +1394,10 @@ function syntaxHL(obj, indent=0) {
 const obs = new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vis');});},{threshold:0.1});
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 
-// Auto-load demo
+// Auto-load demo — start with free endpoint
+selEp='demo';
+document.querySelectorAll('.demo-ep-item').forEach(el=>el.classList.remove('active'));
+document.querySelector('[data-ep="demo"]').classList.add('active');
 setTimeout(()=>fetchDemo(), 1200);
 </script>
 </body>
