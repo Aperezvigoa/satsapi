@@ -46,7 +46,7 @@ async function checkInvoice(paymentHash) {
 
 async function l402Middleware(req, res, next) {
   // Rutas públicas — sin pago
-  if (req.path === '/' || req.path === '/docs' || req.path === '/docs.html' || req.path === '/health') {
+  if (req.path === '/' || req.path === '/docs' || req.path === '/docs.html' || req.path === '/health' || req.path.startsWith('/v1/demo')) {
     return next();
   }
 
