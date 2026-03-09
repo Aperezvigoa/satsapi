@@ -30,24 +30,38 @@
     "@type": "SoftwareApplication",
     "name": "SatsAPI",
     "applicationCategory": "DeveloperApplication",
-    "description": "Bitcoin market data API powered by the L402 protocol. Pay per request with Lightning Network. No subscriptions, no API keys.",
+    "applicationSubCategory": "FinancialDataAPI",
+    "description": "Bitcoin market intelligence API using L402 protocol for pay-per-call access via Lightning Network. No API keys, no subscriptions, no registration. Pay 2-200 satoshis per request. Designed for developers and autonomous AI agents.",
     "url": "https://satsapi.dev",
+    "sameAs": ["https://github.com/Aperezvigoa/satsapi"],
     "offers": {
       "@type": "Offer",
       "price": "0.00002",
       "priceCurrency": "USD",
-      "description": "Pay per request starting at 2 satoshis via Lightning Network"
+      "description": "Pay per request via Lightning Network. 2 sats minimum, 200 sats maximum per call.",
+      "availability": "https://schema.org/InStock"
     },
     "featureList": [
-      "Bitcoin price and RSI",
-      "Mempool fee estimates",
-      "Fear and Greed Index",
-      "On-chain metrics",
-      "Derivatives data",
-      "AI-powered trading signals",
-      "L402 Lightning payments",
-      "No API keys required"
-    ]
+      "Real-time Bitcoin price with RSI, MACD and moving averages",
+      "Mempool fee estimates for 10min, 30min and 1h confirmation",
+      "Fear and Greed Index with trend",
+      "On-chain metrics: dominance, hashrate, supply, market phase",
+      "Derivatives data: funding rates, open interest, leverage risk",
+      "AI-powered news summary with sentiment analysis",
+      "9-factor BUY/SELL/HOLD signal with trade setup",
+      "Full market summary with bot_ready object for AI agents",
+      "L402 Lightning Network authentication",
+      "No API keys required",
+      "No registration required",
+      "Compatible with LangChain, AutoGPT and AI agent frameworks"
+    ],
+    "audience": {
+      "@type": "Audience",
+      "audienceType": "Developers, AI agents, trading bots, Bitcoin builders"
+    },
+    "isAccessibleForFree": false,
+    "paymentAccepted": "Bitcoin Lightning Network",
+    "keywords": "Bitcoin API, Lightning Network, L402, pay per call, AI agents, trading signals, market data, phoenixd, no API key"
   }
   </script>
 

@@ -1,0 +1,80 @@
+# SatsAPI
+
+> Bitcoin market intelligence API. Pay per call with Lightning Network using L402. No API keys, no subscriptions, no registration.
+
+SatsAPI is a Bitcoin data API that uses the L402 protocol (HTTP 402 + Lightning Network) for pay-per-call authentication. Instead of API keys or subscriptions, callers pay a tiny Lightning invoice per request — between 2 and 200 satoshis (~$0.001 to ~$0.12).
+
+The API is designed for both human developers and autonomous AI agents. Every response includes structured JSON optimized for programmatic consumption, and the /v1/summary endpoint returns a flat `bot_ready` object with only primitive values — no parsing required.
+
+## Base URL
+
+https://satsapi.dev
+
+## Endpoints
+
+- GET /v1/price — Real-time BTC price with RSI (1D/4H/1H), MACD bias, 50/200-day moving averages, Bollinger Bands and trend direction. Cost: 3 sats.
+- GET /v1/mempool — Mempool status with optimal fees for 10min, 30min and 1h confirmation windows. Last block data and congestion level. Cost: 2 sats.
+- GET /v1/tx/:txid — Transaction lookup by TXID. Returns confirmation status, block position, fee details and transferred value. Cost: 2 sats.
+- GET /v1/onchain — Fear & Greed index, BTC dominance, circulating supply, hashrate trend and market phase. Cost: 15 sats.
+- GET /v1/derivatives — Funding rates, open interest, long/short ratio and leverage risk assessment. Cost: 15 sats.
+- GET /v1/news — AI-powered daily Bitcoin news summary with sentiment analysis (BULLISH/NEUTRAL/BEARISH). Cost: 50 sats.
+- GET /v1/signal — 9-factor BUY/SELL/HOLD signal with confluence score, confidence, risk level, AI reasoning, historical context and ATR-based trade setup. Factors: RSI multi-timeframe, trend, Pi Cycle Top, Fear & Greed, news sentiment, derivatives, MACD, Bollinger Bands, timeframe alignment. Cost: 150 sats.
+- GET /v1/summary — Full market intelligence report aggregating all endpoints. Includes executive summary, bot_ready object, risk matrix, key levels and all factor data. Cost: 200 sats.
+
+## Authentication — L402 Protocol
+
+1. Make a GET request to any endpoint
+2. Server returns HTTP 402 with: `{ invoice, payment_hash, amount_sats }`
+3. Pay the Lightning invoice with any Lightning wallet
+4. Retry the request with `?payment_hash=<hash>`
+5. Server returns 200 with data
+
+No registration required. No API key. The payment proves access.
+
+## bot_ready Object
+
+The /v1/summary endpoint returns a flat `bot_ready` object for AI agents:
+
+```json
+{
+  "signal": "HOLD",
+  "confluence": 45,
+  "market_score": 61,
+  "market_score_label": "BULLISH",
+  "price_usd": 68093.89,
+  "rsi_1d": 56.7,
+  "fear_greed": 8,
+  "fear_greed_label": "Extreme Fear",
+  "leverage_risk": "LOW",
+  "funding_bias": "NEUTRAL",
+  "news_sentiment": "BULLISH",
+  "btc_dominance": "56.6%",
+  "support": 60941.17,
+  "resistance": 73640.74,
+  "highest_risk": "OPPORTUNITY"
+}
+```
+
+Agent decision logic example:
+```python
+if data['signal'] == 'BUY' and data['confluence'] > 65 and data['leverage_risk'] != 'EXTREME':
+    execute_buy()
+```
+
+## Rate Limits
+
+- Standard endpoints (/v1/price, /v1/mempool, /v1/tx, /v1/onchain, /v1/derivatives): 60 req/min
+- AI endpoints (/v1/news, /v1/signal): 10 req/min
+- Summary endpoint (/v1/summary): 5 req/min
+
+## Public Endpoints (no payment required)
+
+- GET / — API index with endpoint list and costs
+- GET /health — Live node status (phoenixd state, balance, block height)
+- GET /docs — Full documentation
+
+## Links
+
+- Documentation: https://satsapi.dev/docs
+- Health status: https://satsapi.dev/health
+- GitHub: https://github.com/Aperezvigoa/satsapi
